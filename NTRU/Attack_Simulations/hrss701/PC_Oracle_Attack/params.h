@@ -50,6 +50,9 @@ typedef struct{
 
 #define NO_TESTS 100
 
+#define M_VALUE 4
+#define N_VALUE 2
+
 uint32_t m_attack;
 uint32_t n_attack;
 

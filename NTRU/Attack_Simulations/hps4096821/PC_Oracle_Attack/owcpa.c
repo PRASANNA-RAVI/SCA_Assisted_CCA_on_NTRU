@@ -157,14 +157,10 @@ void owcpa_keypair(unsigned char *pk,
   }
   printf("\n");
 
-  // printf("Printing Secret Key g...\n");
   for(int hfh = 0; hfh < NTRU_N; hfh++)
   {
     global_g->coeffs[hfh] = g->coeffs[hfh];
-    // printf("%d, ", g->coeffs[hfh]);
   }
-  // printf("\n");
-
 
 
 #ifdef NTRU_HRSS
@@ -196,6 +192,9 @@ void owcpa_keypair(unsigned char *pk,
 }
 
 
+// Procedure to Create Malformed Ciphertexts.... This encryption procedure can operate in different modes depending upon the
+// value of the variable "intended_function"...
+
 void owcpa_enc(unsigned char *c,
                const poly *r,
                const poly *m,
@@ -208,13 +207,6 @@ void owcpa_enc(unsigned char *c,
 
   poly_Rq_sum_zero_frombytes(h, pk);
 
-  // poly_Rq_mul(ct, r, h);
-  //
-  // poly_lift(liftm, m);
-  //
-  // for(i=0; i<NTRU_N; i++)
-  //   ct->coeffs[i] = ct->coeffs[i] + liftm->coeffs[i];
-
   poly x3, x4, yry1;
   poly *x_f_prod = &x3;
   poly *x_g_prod = &x4;
@@ -226,10 +218,13 @@ void owcpa_enc(unsigned char *c,
 
   uint32_t mul_const;
 
+  // If intended_function == 0, then we are trying to create ciphertexts for single collision...
+
   if(intended_function == 0)
   {
     rej0:
-    // Construct power of x...
+
+    // Construct d1 = (x^i1 + x^i2 + .... + x^im)...
 
     for(int we1 = 0; we1 < NTRU_N; we1++)
     {
@@ -238,24 +233,12 @@ void owcpa_enc(unsigned char *c,
 
     for(int we1 = 0; we1 < m_attack; we1++)
     {
-      // int found = 0;
       int index;
 
-      // while(found == 0)
-      // {
-        // Choose random indices for each we1... (but should it be big???)
-        int rand_value = (get_random()*256 + get_random());
-        index = rand_value % (NTRU_N);
-        if(index < 0)
-          index = index + NTRU_N;
-
-        // if(index < p/2)
-        //   found = 0;
-        // else
-        //   found = 1;
-
-      //   found = 1;
-      // }
+      int rand_value = (get_random()*256 + get_random());
+      index = rand_value % (NTRU_N);
+      if(index < 0)
+        index = index + NTRU_N;
 
       if(we1%2 == 0)
         x_f_array->coeffs[index] = 1;
@@ -263,14 +246,7 @@ void owcpa_enc(unsigned char *c,
         x_f_array->coeffs[index] = NTRU_Q - 1;
     }
 
-    // printf("Printing x_f_array...\n");
-    // for(int hfh = 0; hfh < NTRU_N; hfh++)
-    // {
-    //   printf("%d, ", x_f_array->coeffs[hfh]);
-    // }
-    // printf("\n");
-
-    // Construct power of x...
+    // Construct d2 = (x^j1 + x^j2 + .... + x^jn)...
 
     for(int we1 = 0; we1 < NTRU_N; we1++)
     {
@@ -278,31 +254,15 @@ void owcpa_enc(unsigned char *c,
     }
     for(int we1 = 0; we1 < n_attack; we1++)
     {
-      // int found = 0;
       int index;
-      // while(found == 0)
-      // {
-        // Choose random indices for each we1... (but should it be big???)
-        int rand_value = (get_random()*256 + get_random());
-        index = rand_value%NTRU_N;
-        if(index < 0)
-          index = index + NTRU_N;
 
-        // if(index < (p/2))
-        //   found = 0;
-        // else
-        //   found = 1;
-      // }
+      int rand_value = (get_random()*256 + get_random());
+      index = rand_value%NTRU_N;
+      if(index < 0)
+        index = index + NTRU_N;
 
       x_g_array->coeffs[index] = 1;
     }
-
-    // printf("Printing x_g_array...\n");
-    // for(int hfh = 0; hfh < NTRU_N; hfh++)
-    // {
-    //   printf("%d, ", x_g_array->coeffs[hfh]);
-    // }
-    // printf("\n");
 
     for(int yr = 0; yr < NTRU_N; yr++)
     {
@@ -310,17 +270,9 @@ void owcpa_enc(unsigned char *c,
       x_g_array_copy->coeffs[yr] = x_g_array->coeffs[yr];
     }
 
-    // Construct ciphertext c = c . x_f_array + c . x_g_array . h
+    // Construct ciphertext c = k1 . d1 + k2 . d2 . h where k1 = c_value_1 and k2 = c_value_2...
 
     poly_Rq_mul(x_g_int, x_g_array_copy, h);
-
-
-    // printf("Printing x_g_int...\n");
-    // for(int hfh = 0; hfh < NTRU_N; hfh++)
-    // {
-    //   printf("%d, ", x_g_int->coeffs[hfh]);
-    // }
-    // printf("\n");
 
     uint32_t temp_value;
     for(int sd = 0; sd < NTRU_N; sd++)
@@ -329,149 +281,11 @@ void owcpa_enc(unsigned char *c,
       ct->coeffs[sd] = MODQ(temp_value);
     }
 
-    // for(int sd = 0; sd < NTRU_N; sd++)
-    //   global_c_in_encrypt[sd] = ct->coeffs[sd];
-
-
-
-
-
-    // To Cross Check with known f and g...
-
-    poly_Rq_mul(x_f_prod,x_f_array,global_f);
-    poly_Rq_mul(x_g_prod,x_g_array,global_g);
-
-    // printf("Printing x_f_prod...\n");
-    // for(int hfh = 0; hfh < NTRU_N; hfh++)
-    // {
-    //   printf("%d, ", MODQ(x_f_prod->coeffs[hfh]));
-    // }
-    // printf("\n");
-
-
-    // printf("Printing x_g_prod...\n");
-    // for(int hfh = 0; hfh < NTRU_N; hfh++)
-    // {
-    //   printf("%d, ", MODQ(x_g_prod->coeffs[hfh]));
-    // }
-    // printf("\n");
-
-    // printf("Printing Secret f + Secret g\n");
-
-    // Now, we need to count the number of collisions...
-
-    int no_collisions_pos = 0;
-    int no_collisions_neg = 0;
-    int max_collision_value_pos = (m_attack + n_attack);
-    int max_collision_value_neg = NTRU_Q - (m_attack + n_attack);
-
-    // printf("Printing Sum Value...\n");
-    for(int hj = 0; hj < NTRU_N; hj++)
-    {
-      int sum_value = MODQ(x_f_prod->coeffs[hj] + x_g_prod->coeffs[hj]);
-      // printf("[%d]: %d, ", hj, sum_value);
-      if(sum_value == max_collision_value_pos)
-      {
-        no_collisions_pos = no_collisions_pos+1;
-      }
-      else if(sum_value == max_collision_value_neg)
-      {
-        no_collisions_neg = no_collisions_neg+1;
-      }
-    }
-
-    // printf("\n");
-    // printf("no_collisions_pos: %d, no_collisions_neg: %d\n",no_collisions_pos,no_collisions_neg);
-
-    for(int hj = 0; hj < NTRU_N; hj++)
-    {
-      x_g_prod->coeffs[hj] = MODQ(3*x_g_prod->coeffs[hj]);
-      // x_g_prod->coeffs[hj] = (3*x_g_prod->coeffs[hj]);
-    }
-
-    // printf("Printing x_f_prod in encrypt..\n");
-    // for(int df = 0; df < NTRU_N; df++)
-    // {
-    //   printf("%d, ", x_f_prod->coeffs[df]);
-    // }
-    // printf("\n");
-    //
-    // printf("Printing 3*x_g_prod in encrypt..\n");
-    // for(int df = 0; df < NTRU_N; df++)
-    // {
-    //   printf("%d, ", x_g_prod->coeffs[df]);
-    // }
-    // printf("\n");
-
-
-
-    uint32_t vvvv, uuuu;
-    uint16_t temp_temp;
-    // printf("Printing f*k1 in encrypt..\n");
-    // for(int hj = 0; hj < NTRU_N; hj++)
-    // {
-    //   uuuu = MODQ(x_f_prod->coeffs[hj]);
-    //   vvvv = MODQ(x_f_prod->coeffs[hj]*c_value_1);
-    //   printf("%d/%d/%d, ", uuuu, c_value_1, vvvv);
-    // }
-    // printf("\n");
-
-
-    for(int hj = 0; hj < NTRU_N; hj++)
-    {
-      temp_temp = x_f_prod->coeffs[hj];
-      vvvv = MODQ(x_f_prod->coeffs[hj]*c_value_1 + x_g_prod->coeffs[hj]*c_value_2);
-      x_f_prod->coeffs[hj] = vvvv;
-      // printf("%d, %d, %d, %d, %d, %d\n", temp_temp, x_g_prod->coeffs[hj], c_value_1, c_value_2, vvvv, x_f_prod->coeffs[hj]);
-    }
-
-    // printf("Printing cf in encrypt..\n");
-    // for(int df = 0; df < NTRU_N; df++)
-    // {
-    //   printf("%d, ", x_f_prod->coeffs[df]);
-    // }
-    // printf("\n");
-
-    // R3_fromRq(er,x_f_prod);
-
-
-    //
-    // Rq_mult_small(x_f_prod,x_f_array,global_f);
-    // Rq_mult_small(x_g_prod,x_g_array,global_g);
-    //
-    //
-    // for(int hj = 0; hj < p; hj++)
-    // {
-    //   x_f_prod[hj] = Fq_freeze(3*x_f_prod[hj]);
-    // }
-    //
-    // for(int hj = 0; hj < p; hj++)
-    // {
-    //   x_f_prod[hj] = x_f_prod[hj] + x_g_prod[hj];
-    //   x_f_prod[hj] = Fq_freeze(c_value*x_f_prod[hj]);
-    // }
-    //
-    // // printf("Printing x_f_prod in attack..\n");
-    // // for(int df = 0; df < p; df++)
-    // // {
-    // //   printf("%d: %d, ", df, x_f_prod[df]);
-    // // }
-    // // printf("\n");
-    //
-    // R3_fromRq(er,x_f_prod);
-
-
-
-
-
-
-
   }
 
 
-
-
-
+  // If intended_function == 1, then we are trying to create attack ciphertexts using the base ciphertext...
+  // More concretely, as shown in the paper, we are creating the ciphertext c = l1 . d1 + l2 . d2. h - l3 . x^u . (x - 1)
 
   if(intended_function == 1)
   {
@@ -482,22 +296,10 @@ void owcpa_enc(unsigned char *c,
       x_g_array_copy->coeffs[yr] = x_g_array->coeffs[yr];
     }
 
-    // printf("Printing x_f_array...\n");
-    // for(int hfh = 0; hfh < NTRU_N; hfh++)
-    // {
-    //   printf("%d, ", x_f_array_copy->coeffs[hfh]);
-    // }
-    // printf("\n");
-    //
-    // printf("Printing x_g_array...\n");
-    // for(int hfh = 0; hfh < NTRU_N; hfh++)
-    // {
-    //   printf("%d, ", x_g_array_copy->coeffs[hfh]);
-    // }
-    // printf("\n");
-
     poly xx1;
     poly *x_f_attack_array = &xx1;
+
+    // Here we are trying to create the term x^u . (x - 1) where u = sec_index... This term is nothing but x_f_attack_array...
 
     for(int gd = 0; gd<NTRU_N; gd++)
       x_f_attack_array->coeffs[gd] = 0;
@@ -508,23 +310,10 @@ void owcpa_enc(unsigned char *c,
     else
       x_f_attack_array->coeffs[0] = NTRU_Q - 1;
 
-    // printf("Printing x_f_attack_array...\n");
-    // for(int hfh = 0; hfh < NTRU_N; hfh++)
-    // {
-    //   printf("%d, ", x_f_attack_array->coeffs[hfh]);
-    // }
-    // printf("\n");
-
-    // Construct ciphertext c = c . x_f_array + c . x_g_array . h
+    // Here we construct the terms c = l1 . d1 + l2 . d2. h - l3 . x^u . (x - 1)
+    // x_f_array holds the value of d1, x_g_array holds the value of d2 and x_f_arrack_array holds the value of x^u . (x - 1)...
 
     poly_Rq_mul(x_g_int, x_g_array_copy, h);
-
-    // printf("Printing x_g_int...\n");
-    // for(int hfh = 0; hfh < NTRU_N; hfh++)
-    // {
-    //   printf("%d, ", x_g_int->coeffs[hfh]);
-    // }
-    // printf("\n");
 
     int k_value_1, k_value_2, k_value_3;
 
@@ -557,6 +346,8 @@ void owcpa_enc(unsigned char *c,
       k_value_3 = c2_value_3;
     }
 
+    // Here we construct the coefficients of c one by one... l1 = k_value_1, l2 = k_value_3 and l3 = k_value_2...
+
     uint32_t temp_value;
     for(int sd = 0; sd < NTRU_N; sd++)
     {
@@ -564,179 +355,17 @@ void owcpa_enc(unsigned char *c,
       ct->coeffs[sd] = MODQ(temp_value);
     }
 
-    // To Cross Check with known f and g...
-
-    poly_Rq_mul(x_f_prod,x_f_array,global_f);
-    poly_Rq_mul(x_g_prod,x_g_array,global_g);
-    poly_Rq_mul(x_f_attack_prod,x_f_attack_array,global_f);
-
-    // printf("Printing x_f_prod...\n");
-    // for(int hfh = 0; hfh < NTRU_N; hfh++)
-    // {
-    //   printf("%d, ", MODQ(x_f_prod->coeffs[hfh]));
-    // }
-    // printf("\n");
-
-
-    // printf("Printing x_g_prod...\n");
-    // for(int hfh = 0; hfh < NTRU_N; hfh++)
-    // {
-    //   printf("%d, ", MODQ(x_g_prod->coeffs[hfh]));
-    // }
-    // printf("\n");
-
-    // printf("Printing Secret f + Secret g\n");
-
-    // // Now, we need to count the number of collisions...
-    //
-    // int no_collisions_pos = 0;
-    // int no_collisions_neg = 0;
-    // int max_collision_value_pos = (m_attack + n_attack);
-    // int max_collision_value_neg = 2048 - (m_attack + n_attack);
-    //
-    // // printf("Printing Sum Value...\n");
-    // for(int hj = 0; hj < NTRU_N; hj++)
-    // {
-    //   int sum_value = MODQ(x_f_prod->coeffs[hj] + x_g_prod->coeffs[hj]);
-    //   // printf("[%d]: %d, ", hj, sum_value);
-    //   if(sum_value == max_collision_value_pos)
-    //   {
-    //     no_collisions_pos = no_collisions_pos+1;
-    //   }
-    //   else if(sum_value == max_collision_value_neg)
-    //   {
-    //     no_collisions_neg = no_collisions_neg+1;
-    //   }
-    // }
-    // // printf("\n");
-    // printf("no_collisions_pos: %d, no_collisions_neg: %d\n",no_collisions_pos,no_collisions_neg);
-
-
-    for(int hj = 0; hj < NTRU_N; hj++)
-    {
-      x_g_prod->coeffs[hj] = MODQ(3*x_g_prod->coeffs[hj]);
-      // x_g_prod->coeffs[hj] = (3*x_g_prod->coeffs[hj]);
-    }
-
-    // printf("Printing x_f_prod in encrypt..\n");
-    // for(int df = 0; df < NTRU_N; df++)
-    // {
-    //   printf("%d, ", x_f_prod->coeffs[df]);
-    // }
-    // printf("\n");
-    //
-    // printf("Printing 3*x_g_prod in encrypt..\n");
-    // for(int df = 0; df < NTRU_N; df++)
-    // {
-    //   printf("%d, ", x_g_prod->coeffs[df]);
-    // }
-    // printf("\n");
-
-
-
-    uint32_t vvvv, uuuu;
-    uint16_t temp_temp;
-    // printf("Printing f*k1 in encrypt..\n");
-    // for(int hj = 0; hj < NTRU_N; hj++)
-    // {
-    //   uuuu = MODQ(x_f_prod->coeffs[hj]);
-    //   vvvv = MODQ(x_f_prod->coeffs[hj]*c_value_1);
-    //   printf("%d/%d/%d, ", uuuu, c_value_1, vvvv);
-    // }
-    // printf("\n");
-
-
-    for(int hj = 0; hj < NTRU_N; hj++)
-    {
-      temp_temp = x_f_prod->coeffs[hj];
-      vvvv = MODQ(x_f_prod->coeffs[hj]*k_value_1 + x_g_prod->coeffs[hj]*k_value_3 + x_f_attack_prod->coeffs[hj]*mul_const*k_value_2);
-      x_f_prod->coeffs[hj] = vvvv;
-      // printf("%d, %d, %d, %d, %d, %d\n", temp_temp, x_g_prod->coeffs[hj], c_value_1, c_value_2, vvvv, x_f_prod->coeffs[hj]);
-    }
-
-    // Collision value...
-
-    int f_1_value, f_2_value;
-
-    if(collision_index > sec_index)
-    {
-      f_1_value = global_f->coeffs[collision_index-sec_index];
-      f_2_value = global_f->coeffs[collision_index-sec_index-1];
-    }
-    else if(collision_index == sec_index)
-    {
-      f_1_value = global_f->coeffs[0];
-      f_2_value = global_f->coeffs[NTRU_N-1];
-    }
-    else
-    {
-      f_1_value = global_f->coeffs[NTRU_N - (sec_index - collision_index)];
-      f_2_value = global_f->coeffs[NTRU_N - ((sec_index - collision_index) + 1)];
-    }
-
-    correct_f_value = MODQ(f_1_value - f_2_value);
-
-    // printf("f_value: %d\n",correct_f_value);
-
-    // printf("Printing cf in encrypt..\n");
-    // for(int df = 0; df < NTRU_N; df++)
-    // {
-    //   printf("%d, ", x_f_prod->coeffs[df]);
-    // }
-    // printf("\n");
-
-    // R3_fromRq(er,x_f_prod);
-
-
-    //
-    // Rq_mult_small(x_f_prod,x_f_array,global_f);
-    // Rq_mult_small(x_g_prod,x_g_array,global_g);
-    //
-    //
-    // for(int hj = 0; hj < p; hj++)
-    // {
-    //   x_f_prod[hj] = Fq_freeze(3*x_f_prod[hj]);
-    // }
-    //
-    // for(int hj = 0; hj < p; hj++)
-    // {
-    //   x_f_prod[hj] = x_f_prod[hj] + x_g_prod[hj];
-    //   x_f_prod[hj] = Fq_freeze(c_value*x_f_prod[hj]);
-    // }
-    //
-    // // printf("Printing x_f_prod in attack..\n");
-    // // for(int df = 0; df < p; df++)
-    // // {
-    // //   printf("%d: %d, ", df, x_f_prod[df]);
-    // // }
-    // // printf("\n");
-    //
-    // R3_fromRq(er,x_f_prod);
-
-
-
-
-
-
-
   }
 
+  // Here, we are checking whether sum of coefficients of c equate to 0... because c should be a multiple of (x - 1)
 
-  // printf("Printing ct...\n");
-  // for(int hfh = 0; hfh < NTRU_N; hfh++)
-  // {
-  //   printf("%d, ", ct->coeffs[hfh]);
-  // }
-  // printf("\n");
-
-  // printf("Printing summ(ct)...\n");
   int summ = 0;
   for(int hfh = 0; hfh < NTRU_N; hfh++)
   {
     summ = MODQ(summ + ct->coeffs[hfh]);
   }
-  // printf("%d\n", summ);
-  // printf("\n");
+
+  // If not, reject it and start again...
 
   if(summ != 0)
   {
@@ -747,7 +376,6 @@ void owcpa_enc(unsigned char *c,
   }
 
   poly_Rq_sum_zero_tobytes(c, ct);
-
 
 }
 

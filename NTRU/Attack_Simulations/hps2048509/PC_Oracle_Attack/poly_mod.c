@@ -78,15 +78,15 @@ void poly_Rq_to_S3(poly *r, const poly *a)
   }
 
 
-  printf("Printing cf inside decrypt...\n");
-  for(int hfh = 0; hfh < NTRU_N; hfh++)
-  {
-    // printf("[%d]: %d, ", hfh, r->coeffs[hfh]);
-    printf("%d, ", r->coeffs[hfh]);
-    // if(r->coeffs[hfh] > NTRU_Q/2)
-    //   printf("[%d] = %d\n", hfh, r->coeffs[hfh]);
-  }
-  printf("\n");
+  // printf("Printing cf inside decrypt...\n");
+  // for(int hfh = 0; hfh < NTRU_N; hfh++)
+  // {
+  //   // printf("[%d]: %d, ", hfh, r->coeffs[hfh]);
+  //   printf("%d, ", r->coeffs[hfh]);
+  //   // if(r->coeffs[hfh] > NTRU_Q/2)
+  //   //   printf("[%d] = %d\n", hfh, r->coeffs[hfh]);
+  // }
+  // printf("\n");
 
 
   for(i=0; i<NTRU_N; i++)
