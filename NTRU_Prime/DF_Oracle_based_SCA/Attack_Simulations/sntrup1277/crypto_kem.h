@@ -27,62 +27,29 @@
 #define NO_COEFFS 10
 #define NO_TESTS 100
 
+#define M_VALUE 0
+#define N_VALUE 4
+
 int intended_function;
 int sec_index;
 int no_leakage_trials;
 
 #define DO_ATTACK_COLLISION_NEW 1
 
-// m = 1, n = 1...
-// #define GAP_THRESHOLD_1 133
-// #define GAP_THRESHOLD_2 116
-// #define C_VALUE_THRESHOLD 200
-
-// // m = 1, n = 2...
-// #define GAP_THRESHOLD_1 108
-// #define GAP_THRESHOLD_2 95
-// #define C_VALUE_THRESHOLD 200
-
-// // m = 0, n = 4...
-// #define GAP_THRESHOLD_1_1 10
-// #define GAP_THRESHOLD_1_2 90
-// #define GAP_THRESHOLD_2_1 10
-// #define GAP_THRESHOLD_2_2 80
-// #define C_VALUE_THRESHOLD_1 130
-// #define C_VALUE_THRESHOLD_2 130
-// // #define C_VALUE_THRESHOLD_1_TRIMMER 5
-// // #define C_VALUE_THRESHOLD_2_TRIMMER 80
-// #define C_VALUE_THRESHOLD_1_TRIMMER_LESS 100
-// #define C_VALUE_THRESHOLD_1_TRIMMER_GREAT 125
-
-
-// m = 1, n = 3...
 #define GAP_THRESHOLD_1_1 110
 #define GAP_THRESHOLD_1_2 110
+
 #define GAP_THRESHOLD_2_1 200
 #define GAP_THRESHOLD_2_2 200
+
 #define C_VALUE_THRESHOLD_1 130
 #define C_VALUE_THRESHOLD_2 130
+
 #define C_VALUE_THRESHOLD_1_TRIMMER 5
 #define C_VALUE_THRESHOLD_2_TRIMMER 80
-// #define C_VALUE_THRESHOLD_1_TRIMMER_LESS 0
-// #define C_VALUE_THRESHOLD_1_TRIMMER_GREAT 20
+
 #define C_VALUE_THRESHOLD_1_TRIMMER_LESS 20
 #define C_VALUE_THRESHOLD_1_TRIMMER_GREAT 40
-
-
-// // m = 1, n = 2...
-// #define GAP_THRESHOLD_1_1 10
-// #define GAP_THRESHOLD_1_2 90
-// #define GAP_THRESHOLD_2_1 10
-// #define GAP_THRESHOLD_2_2 80
-// #define C_VALUE_THRESHOLD_1 130
-// #define C_VALUE_THRESHOLD_2 130
-// #define C_VALUE_THRESHOLD_1_TRIMMER 5
-// #define C_VALUE_THRESHOLD_2_TRIMMER 80
-// #define C_VALUE_THRESHOLD_1_TRIMMER_LESS 100
-// #define C_VALUE_THRESHOLD_1_TRIMMER_GREAT 125
-
 
 #define TRIALS_FOR_SHUFFLING 1
 #define TOTAL_COEFFS_TO_FIND (p-2)

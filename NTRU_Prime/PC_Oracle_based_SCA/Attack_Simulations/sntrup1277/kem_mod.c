@@ -509,7 +509,6 @@ static void Encrypt(Fq *c,const small *r,const Fq *h)
 
   if(intended_function == 0)
   {
-      // Construct power of x...
 
       for(int we1 = 0; we1 < p; we1++)
       {
@@ -522,16 +521,10 @@ static void Encrypt(Fq *c,const small *r,const Fq *h)
         int index;
         while(found == 0)
         {
-          // Choose random indices for each we1... (but should it be big???)
           int rand_value = (get_random()*256 + get_random());
           index = rand_value%p;
           if(index < 0)
             index = index + p;
-
-          // if(index < p/2)
-          //   found = 0;
-          // else
-          //   found = 1;
 
           if(index >= 0 && index < p)
             found = 1;
@@ -553,16 +546,11 @@ static void Encrypt(Fq *c,const small *r,const Fq *h)
         int index;
         while(found == 0)
         {
-          // Choose random indices for each we1... (but should it be big???)
           int rand_value = (get_random()*256 + get_random());
           index = rand_value%p;
           if(index < 0)
             index = index + p;
 
-          // if(index < (p/2))
-          //   found = 0;
-          // else
-          //   found = 1;
 
           if(index >= 0 && index < p)
             found = 1;
@@ -578,8 +566,6 @@ static void Encrypt(Fq *c,const small *r,const Fq *h)
         x_f_array_copy[yr] = x_f_array[yr];
         x_g_array_copy[yr] = x_g_array[yr];
       }
-
-      // Construct ciphertext c = c . x_f_array + c . x_g_array . h
 
       Fq x_f_int[p];
       Fq x_g_int[p];
@@ -609,14 +595,11 @@ static void Encrypt(Fq *c,const small *r,const Fq *h)
       x_g_array_copy[yr] = x_g_array[yr];
     }
 
-    // Construct ciphertext c = c . x_f_array + c . x_g_array . h
-
     Fq x_f_int[p];
     Fq x_g_int[p];
 
     Rq_mult_small(x_g_int,h,x_g_array_copy);
 
-    // Should define the additional polynomial factor here...
 
     Fq x_f_attack_array[p];
 

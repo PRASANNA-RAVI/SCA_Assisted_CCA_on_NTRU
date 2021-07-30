@@ -20,7 +20,13 @@
 double mean_now = 0;
 double std_dev = 2;
 
-#define COLL_CHECK 0
+// This setting is used to write the data to a text file for analysis... This need not be turned on to run attack simulations...
+
+#define DO_PRINT 1
+
+// This setting is used for debug purposes... It is used to track the progress of the success of key recovery.. No additional info is fed into the attack in the debug mode...It is just for monitoring purposes for the user... Displays more information on the terminal...
+
+#define COLL_CHECK 1
 
 static int shift_lfsr(unsigned int *lfsr, unsigned int polynomial_mask)
 {
@@ -36,7 +42,7 @@ static int shift_lfsr(unsigned int *lfsr, unsigned int polynomial_mask)
 static int get_random(void)
 {
     int temp;
-    unsigned int POLY_MASK_HERE_1 = 0x124312BE;
+    unsigned int POLY_MASK_HERE_1 = 0x121212AB;
     unsigned int POLY_MASK_HERE_2 = 0xABBBEECD;
     static unsigned int lfsr_1 = 0x55AAEEFF;
     static unsigned int lfsr_2 = 0xFFAA8844;
@@ -179,9 +185,6 @@ unsigned char temp_temp_char;
 
 no_leakage_trials = 100;
 
-// extern int collision_array_value[count_threshold];
-// extern int collision_array_index[count_threshold];
-
 int collision_array_value[count_threshold];
 int collision_array_index[count_threshold];
 
@@ -206,9 +209,6 @@ int main()
     for (i=0; i<NTESTS; i++)
         randombytes(seed[i], 48);
 
-
-    #if (DO_ATTACK_COLLISION_NEW == 1)
-
     int found_c = 0;
     int c_value_current;
     int final_coeff_to_find;
@@ -217,52 +217,51 @@ int main()
     FILE * f2;
     FILE * f3;
 
-    char ct_file[30], ct_file_now[30];
-    char ct_file_basic[30], ct_file_now_basic[30];
-    char keypair_file[30], keypair_file_now[30];
-    char oracle_responses_file_name[30], oracle_responses_now_file_name[30];
-    char valid_ct_file[30], valid_ct_file_now[30];
+    char ct_file_now[30];
+    char ct_file_now_basic[30];
+    char keypair_file_now[30];
+    char oracle_responses_now_file_name[30];
+    char valid_ct_file_now[30];
+    char ct_file_basic_failed[50];
 
     int weight_for_secret;
 
-    sprintf(oracle_responses_file_name,"oracle_resp_sntrup761.bin");
-    f2 = fopen(oracle_responses_file_name, "w+");
-    fclose(f2);
+    #if (DO_PRINT == 1)
+
+    // We can store the data of a single iteration in files...
+    // Please note that these files will be overwritten for every iteration...
+
+    // We store the oracle responses in oracle_resp.bin...
 
     sprintf(oracle_responses_now_file_name,"oracle_resp_file.bin");
-    f2 = fopen(oracle_responses_now_file_name, "w+");
-    fclose(f2);
 
-    sprintf(ct_file,"ct_file_sntrup761.bin");
-    f2 = fopen(ct_file, "w+");
-    fclose(f2);
+    // Here, we store the attack ciphertexts...
 
-    sprintf(ct_file_now,"ct_file_now.bin");
-    f2 = fopen(ct_file_now, "w+");
-    fclose(f2);
+    sprintf(ct_file_now,"ct_file.bin");
 
-    sprintf(ct_file_basic,"ct_file_basic_sntrup761.bin");
-    f2 = fopen(ct_file_basic, "w+");
-    fclose(f2);
+    // Here, we store the base ciphertext...
 
-    sprintf(ct_file_now_basic,"ct_file_basic_now.bin");
-    f2 = fopen(ct_file_now_basic, "w+");
-    fclose(f2);
+    sprintf(ct_file_now_basic,"ct_file_basic.bin");
 
-    sprintf(valid_ct_file,"valid_ct_file_sntrup761.bin");
-    f2 = fopen(valid_ct_file, "w+");
-    fclose(f2);
+    // Here, we store the valid ciphertext...
 
-    sprintf(valid_ct_file_now,"valid_ct_file_now.bin");
-    f2 = fopen(valid_ct_file_now, "w+");
-    fclose(f2);
+    sprintf(valid_ct_file_now,"valid_ct_file.bin");
 
-    sprintf(keypair_file,"keypair_file_sntrup761.bin");
-    f2 = fopen(keypair_file, "w+");
-    fclose(f2);
+    // Here, we store the public and private key pair...
 
-    m = 0;
-    n = 4;
+    sprintf(keypair_file_now,"keypair_file.bin");
+
+    // Here, we store the failed ciphertexts which do not correspond to any collision...
+
+    sprintf(ct_file_basic_failed,"ct_file_basic_failed.bin");
+
+    #endif
+
+    // This is where we set the value of the number of non-zero coefficients of the polynomial d1 (m) and d2 (n) in the base ciphertext...
+    // The value for M_VALUE and N_VALUE is set in the crypto_kem.h file.
+
+    m = M_VALUE;
+    n = N_VALUE;
 
     int max_distance = 1000000;
     int max_distance2 = 0;
@@ -325,9 +324,7 @@ int main()
 
     printf("Found c light\n");
 
-
-    // This is for a more closer to q/2 during the collision...If there is still decryption failure, then we know for sure that
-    // the error term is actually positive... Atleast somewhat positive...
+    // This is used to calculate k1 and k2 for the base ciphertext cbase, as described in the paper...
 
     found_c = 0;
 
@@ -388,6 +385,9 @@ int main()
 
 
     printf("Found c trim...\n");
+
+    // Here, we are trying to compute l1, l2 and l3 for the attack ciphertexts as shown in the paper...
+    // We compute l1, l2, l3 is used to distinguish 1...
 
     int list_of_c1_values[30][10];
     int list_of_c2_values[30][10];
@@ -484,6 +484,9 @@ int main()
 
     printf("Found c_1\n");
 
+    // Here, we are trying to compute l1, l2 and l3 for the attack ciphertexts as shown in the paper...
+    // We compute l1, l2, l3 is used to distinguish 2...
+
     max_distance2 = 0;
 
     limit_value = 1000;
@@ -561,6 +564,17 @@ int main()
 
     printf("Found c_2\n");
 
+    // So, we basically get two values for the (l1, l2, l3)... Let us denote them as (l11, l12, l13) and (l21, l22, l23)...
+    // The attack ciphertexts are c = l1. d1 + l2. d2 . h + l3. x^u. (x-1)...
+
+    //       (l11,l12,l13)     (l21,l22,l23)      (l11,l12,-l13)      (l21,l22,-l23)
+    // 2         O                  O                   X                  X
+    // 1         O                  O                   X                  O
+    // 0         O                  O                   O                  O
+    // -1        X                  O                   O                  O
+    // -2        X                  X                   O                  O
+
+
 
     c_value_for_attack_1_1 = c1_value_1;
     c_value_for_attack_1_2 = c1_value_2;
@@ -574,30 +588,62 @@ int main()
     double profile_average_count = 0;
     double trace_average_count = 0;
 
+    if (!ct) ct = malloc(crypto_kem_CIPHERTEXTBYTES);
+    if (!ct) abort();
+    if (!ss) ss = malloc(crypto_kem_BYTES);
+    if (!ss) abort();
+    if (!ss1) ss1 = malloc(crypto_kem_BYTES);
+    if (!ss1) abort();
+    if (!pk) pk = malloc(crypto_kem_PUBLICKEYBYTES);
+    if (!pk) abort();
+    if (!sk) sk = malloc(crypto_kem_SECRETKEYBYTES);
+    if (!sk) abort();
+
+    // Iterate over the number of tests you want to run... The NO_TESTS variable is defined in params.h header file...
+
     for (int pq=0; pq<NO_TESTS; pq++)
     {
         printf("Trial: %d\n",pq);
-        if (!ct) ct = malloc(crypto_kem_CIPHERTEXTBYTES);
-        if (!ct) abort();
-        if (!ss) ss = malloc(crypto_kem_BYTES);
-        if (!ss) abort();
-        if (!ss1) ss1 = malloc(crypto_kem_BYTES);
-        if (!ss1) abort();
-        if (!pk) pk = malloc(crypto_kem_PUBLICKEYBYTES);
-        if (!pk) abort();
-        if (!sk) sk = malloc(crypto_kem_SECRETKEYBYTES);
-        if (!sk) abort();
+
+        // Please note that the data is overwritten for every attack trial... So, only the data for the last trial will be stored...
+
+        #if (DO_PRINT == 1)
+
+          f2 = fopen(oracle_responses_now_file_name, "w+");
+          fclose(f2);
+
+          f2 = fopen(valid_ct_file_now, "w+");
+          fclose(f2);
+
+          f2 = fopen(ct_file_now_basic, "w+");
+          fclose(f2);
+
+          f2 = fopen(ct_file_now, "w+");
+          fclose(f2);
+
+          f2 = fopen(keypair_file_now, "w+");
+          fclose(f2);
+
+          f2 = fopen(ct_file_basic_failed, "w+");
+          fclose(f2);
+
+        #endif
+
+        printf("************************************************************************************************************\n");
+
 
         randombytes_init(seed[i], NULL, 256);
 
-        printf("***********Testing for New Key***********\n");
+        // Generate new key pair ...
+
         if ( (ret_val = crypto_kem_keypair(pk, sk)) != 0)
         {
             return KAT_CRYPTO_FAILURE;
         }
 
+          #if (DO_PRINT == 1)
 
-        f2 = fopen(keypair_file, "a");
+        f2 = fopen(keypair_file_now, "a");
 
         for(int pp1=0;pp1<crypto_kem_PUBLICKEYBYTES;pp1++)
         {
@@ -610,6 +656,7 @@ int main()
         }
         fclose(f2);
 
+        #endif
 
         int successful_attack_done = 0;
 
@@ -631,39 +678,15 @@ int main()
         int profile_trials = 0;
 
 
-
-
-
-        // // Valid Encryption... Encapsulation...
-        // intended_function = 3;
-        // crypto_kem_enc(ct, ss, pk);
-        // crypto_kem_dec(ss1, ct, sk);
-        //
-        // // printf("Printing er_decrypt valid...\n");
-        // for(int i = 0; i < p; i++)
-        // {
-        //   er_decrypt_in_focus[i] = er_decrypt[i];
-        // }
-        //
-        // f2 = fopen(valid_ct_file_now, "w+");
-        //
-        // for(int pp1=0;pp1<crypto_kem_CIPHERTEXTBYTES;pp1++)
-        // {
-        //   fprintf(f2,"%02x", ct[pp1]);
-        // }
-        // fclose(f2);
-        //
-        // for(int re = 0; re < p; re++)
-        //   cf3_in_focus[re] = cf3[re];
-
-
-
-
-
+        // Iterate till you get the correct keys...
 
 
         while(successful_attack_done < 1)
         {
+
+          // The reached variable basically tells if you have finished the attack phase...
+          // If reached = 1 and got_secret == 0, then it means key recovery has failed...So, we need to try again...
+
 
           if(reached == 1 && success_touch == 0)
           {
@@ -671,15 +694,25 @@ int main()
             match_success = 0;
 
             printf("Deleting...\n");
-            f2 = fopen(ct_file_now, "w+");
+
+            #if (DO_PRINT == 1)
+
+            f2 = fopen(oracle_responses_now_file_name, "w+");
+            fclose(f2);
+
+            f2 = fopen(valid_ct_file_now, "w+");
             fclose(f2);
 
             f2 = fopen(ct_file_now_basic, "w+");
             fclose(f2);
 
-            f2 = fopen(oracle_responses_now_file_name, "w+");
+            f2 = fopen(ct_file_now, "w+");
             fclose(f2);
 
+            f2 = fopen(ct_file_basic_failed, "w+");
+            fclose(f2);
+
+            #endif
 
           }
 
@@ -689,7 +722,9 @@ int main()
           now_response_count = 0;
 
           rej:
-          printf("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%TRIAL%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n");
+
+          // The rejected variable tells whether the attack phase was aborted half way, maybe due to bad oracle responses.... Bad oracle responses are possible when
+          // the base ciphertext is wrong...
 
           if(rejected == 1)
           {
@@ -699,14 +734,25 @@ int main()
             match_success = 0;
 
             printf("Deleting...\n");
-            f2 = fopen(ct_file_now, "w+");
+
+            #if (DO_PRINT == 1)
+
+            f2 = fopen(oracle_responses_now_file_name, "w+");
+            fclose(f2);
+
+            f2 = fopen(valid_ct_file_now, "w+");
             fclose(f2);
 
             f2 = fopen(ct_file_now_basic, "w+");
             fclose(f2);
 
-            f2 = fopen(oracle_responses_now_file_name, "w+");
+            f2 = fopen(ct_file_now, "w+");
             fclose(f2);
+
+            f2 = fopen(ct_file_basic_failed, "w+");
+            fclose(f2);
+
+            #endif
 
 
           }
@@ -718,45 +764,37 @@ int main()
 
           while(success_trial == 0)
           {
-
             printf("Try: %d\n",profile_trials);
-            // printf("###########Trying to find collision#########\n");
+
             profile_trials = profile_trials+1;
 
-            // Valid Encryption... Encapsulation...
+            // Here, we generate valid ciphertexts and decapsulate it...
+
             intended_function = 3;
             crypto_kem_enc(ct, ss, pk);
             crypto_kem_dec(ss1, ct, sk);
 
-            // printf("Printing er_decrypt valid...\n");
-            for(int i = 0; i < p; i++)
+            f2 = fopen(valid_ct_file_now, "w+");
+
+            for(int pp1=0;pp1<crypto_kem_CIPHERTEXTBYTES;pp1++)
             {
-              er_decrypt_in_focus[i] = er_decrypt[i];
+              fprintf(f2,"%02x", ct[pp1]);
             }
-
-            // f2 = fopen(valid_ct_file_now, "w+");
-            //
-            // for(int pp1=0;pp1<crypto_kem_CIPHERTEXTBYTES;pp1++)
-            // {
-            //   fprintf(f2,"%02x", ct[pp1]);
-            // }
-            // fclose(f2);
-
-            for(int re = 0; re < p; re++)
-              cf3_in_focus[re] = cf3[re];
-
-
-            // To test number of -1s...
+            fclose(f2);
 
             int got_minus_one = 0;
 
-            // Try to find a collision...
+
+            // Here, we generate our perturbation ciphertext... similar to the ciphertext for the PC oracle attack.... c = k1 . d1 + k2. d2. h
+
             intended_function = 0;
 
             crypto_kem_enc(ct, ss, pk);
             crypto_kem_dec(ss1, ct, sk);
 
             #if (COLL_CHECK == 1)
+
+            // This is used for debug information, to see if the ciphertext resulted in a collision...This is only used to track the progress of the attack...No additional information is fed to perform the attack...
 
             for(int i = 0; i<count_threshold; i++)
             {
@@ -797,10 +835,13 @@ int main()
 
             #endif
 
+            // Here, we add the perturbation to the valid ciphertext and decapsulate it...and observe if it results in a decryption failure...
 
             intended_function = 4;
             crypto_kem_enc(ct, ss, pk);
             crypto_kem_dec(ss1, ct, sk);
+
+            // The decryption failure information is stored in the global_mask variable...
 
             if(global_mask == -1)
             {
@@ -812,32 +853,38 @@ int main()
             {
               success_trial = 1;
 
-              // f2 = fopen(ct_file_now_basic, "a");
-              // for(int pp1=0;pp1<crypto_kem_CIPHERTEXTBYTES;pp1++)
-              // {
-              //   fprintf(f2,"%02x", ct[pp1]);
-              // }
-              // fclose(f2);
+              #if (DO_PRINT == 1)
+
+              f2 = fopen(ct_file_now_basic, "a");
+              for(int pp1=0;pp1<crypto_kem_CIPHERTEXTBYTES;pp1++)
+              {
+                fprintf(f2,"%02x", ct[pp1]);
+              }
+              fclose(f2);
+
+              #endif
+
+            }
+            else
+            {
+
+              #if (DO_PRINT == 1)
+
+              f2 = fopen(ct_file_basic_failed, "a");
+              for(int pp1=0;pp1<crypto_kem_CIPHERTEXTBYTES;pp1++)
+              {
+                fprintf(f2,"%02x", ct[pp1]);
+              }
+              fclose(f2);
+
+              #endif
 
             }
 
 
           }
 
-          // Rule for selecting the coefficients:
-          //
-          // +1/-1:
-          // cval, 0
-          // 0, 0
-          //
-          // +2/-2:
-          // cval, cval
-          // 0, 0
-          //
-          //
-          // 0:
-          // 0, 0
-          // 0, 0
+          // We have now got the base ciphertext... Now, we can do the attack phase...
 
           #if (COLL_CHECK == 1)
 
@@ -850,11 +897,8 @@ int main()
 
           int get_er_decrypt_array[2];
 
-
           int get_er_decrypt_array_all[4*p];
           int count_get_er_decrypt_array_all = 0;
-
-
 
           int check_value_whether_correct = 0;
           int no_coeffs_gone = 0;
@@ -868,27 +912,41 @@ int main()
           int finding_secret_coeff = 0;
           int success_rate = 0;
 
+          // Here, we try to extract the oracle responses for c = cvalid + l1 . d1 + l2 . d2 . h + l3
+
+          // With this, we can get the oracle reponse for the ith coefficient of the secret polynomial f...
+
           int trying_for_now = 0;
           for(int check1 = 0; check1 < 2; check1++)
           {
             int mul_value;
+
+            // Whether to use c = (cvalid + l1 . d1 + l2 . d2 . h + l3) or  (cvalid + l1 . d1 + l2 . d2 . h - l3)
 
             if(check1 == 0)
               mul_value = 1;
             else
               mul_value = -1;
 
+            // This is to indicate utilization of (l1, l2, l3) used to distinguish +1...
+
             check_for_value = mul_value * 1;
+
+            // Here, we are querying the device with attack ciphertexts, built based on the base ciphertext and the valid ciphertext...
 
             intended_function = 1;
             crypto_kem_enc(ct, ss, pk);
             crypto_kem_dec(ss1, ct, sk);
             no_queries = no_queries+1;
 
+            // Storing oracle response in get_er_decrypt_array...
+
             if(global_mask == -1)
               get_er_decrypt_array[0] = -1;
             else
               get_er_decrypt_array[0] = 0;
+
+              // Storing oracle response also in get_er_decrypt_array_all... This array is used for collecting all oracle responses for all coefficients...
 
             if(global_mask == -1)
               get_er_decrypt_array_all[count_get_er_decrypt_array_all] = -1;
@@ -897,33 +955,37 @@ int main()
 
             count_get_er_decrypt_array_all = count_get_er_decrypt_array_all + 1;
 
+            #if (DO_PRINT == 1)
 
-            // f2 = fopen(ct_file_now, "a");
-            // for(int pp1=0;pp1<crypto_kem_CIPHERTEXTBYTES;pp1++)
-            // {
-            //   fprintf(f2,"%02x", ct[pp1]);
-            // }
-            // fclose(f2);
+            // Writing attack ciphertext to text file...
+
+            f2 = fopen(ct_file_now, "a");
+            for(int pp1=0;pp1<crypto_kem_CIPHERTEXTBYTES;pp1++)
+            {
+              fprintf(f2,"%02x", ct[pp1]);
+            }
+            fclose(f2);
 
             temp_temp_char = get_er_decrypt_array[0] & 0xFF;
 
-            // f2 = fopen(oracle_responses_now_file_name, "a");
-            // fprintf(f2,"%02x", temp_temp_char);
-            // fclose(f2);
+            // Writing oracle response to text file...
+
+            f2 = fopen(oracle_responses_now_file_name, "a");
+            fprintf(f2,"%02x", temp_temp_char);
+            fclose(f2);
+
+            #endif
+
+            // This is to indicate utilization of (l1, l2, l3) used to distinguish +2...
 
             check_for_value = mul_value * 2;
+
+            // Repeating the same process...
 
             intended_function = 1;
             crypto_kem_enc(ct, ss, pk);
             crypto_kem_dec(ss1, ct, sk);
             no_queries = no_queries+1;
-
-            // f2 = fopen(ct_file_now, "a");
-            // for(int pp1=0;pp1<crypto_kem_CIPHERTEXTBYTES;pp1++)
-            // {
-            //   fprintf(f2,"%02x", ct[pp1]);
-            // }
-            // fclose(f2);
 
             if(global_mask == -1)
               get_er_decrypt_array[1] = -1;
@@ -937,11 +999,25 @@ int main()
 
             count_get_er_decrypt_array_all = count_get_er_decrypt_array_all + 1;
 
+
+            #if (DO_PRINT == 1)
+
+            f2 = fopen(ct_file_now, "a");
+            for(int pp1=0;pp1<crypto_kem_CIPHERTEXTBYTES;pp1++)
+            {
+              fprintf(f2,"%02x", ct[pp1]);
+            }
+            fclose(f2);
+
             temp_temp_char = get_er_decrypt_array[1] & 0xFF;
 
-            // f2 = fopen(oracle_responses_now_file_name, "a");
-            // fprintf(f2,"%02x", temp_temp_char);
-            // fclose(f2);
+            f2 = fopen(oracle_responses_now_file_name, "a");
+            fprintf(f2,"%02x", temp_temp_char);
+            fclose(f2);
+
+            #endif
+
+            // Here, we are simply checking the oracle responses, whether it agrees with the distinguisher table...If not, then simply discard and start the attack again....
 
             if(get_er_decrypt_array[0] == 0 && get_er_decrypt_array[1] == 0)
             {
@@ -964,6 +1040,8 @@ int main()
               }
               else
               {
+                // Here, oracle response does not agree to the table...discard...
+
                 rejected = 1;
                 printf("Oracle Values...\n");
                 goto rej;
@@ -987,6 +1065,8 @@ int main()
               }
               else
               {
+                // Here, oracle response does not agree to the table...discard...
+
                 rejected = 1;
                 printf("Oracle Values...\n");
                 goto rej;
@@ -996,6 +1076,8 @@ int main()
             }
             else
             {
+              // Here, oracle response does not agree to the table...discard...
+
               rejected = 1;
               printf("Oracle Values...\n");
               goto rej;
@@ -1010,6 +1092,8 @@ int main()
           }
           else if(finding_secret_coeff == 0)
           {
+            // Here, oracle response does not agree to the table...discard...
+
             rejected = 1;
             printf("Unreliable Values...\n");
             goto rej;
@@ -1026,20 +1110,28 @@ int main()
 
           #endif
 
-          final_coeff_to_find = p - 1 - TOTAL_COEFFS_TO_FIND;
-
           int touch_all = 0;
           int touch_0 = 0;
           int touch_1 = 0;
           int touch_2 = 0;
 
-          for(sec_index = p-1; sec_index >= final_coeff_to_find; sec_index--)
+          // Here, we try to extract the oracle responses for ciphertexts formed as
+          // c = (cvalid + l1 . d1 + l2 . d2 . h + l3 . x^u) where u is swept from p-1 until 1...
+
+          for(sec_index = p-1; sec_index >= 1; sec_index--)
           {
 
             int coeff_now, coeff_now_1, coeff_now_2;
             int f_coeff_value;
 
             #if (COLL_CHECK == 1)
+
+            // In the debug mode, we know the collision index and the collision value... so, we use that to track the actual secret coefficient that
+            // corresponds to the current iteration... So, we use this information to track the success of key recovery using the
+            // oracle's responses..... But, this information is not used to perform/aid the attack...We simply use it for monitoring
+            // purposes...
+            // The correct secret coefficient is stord in the f_coeff_value variable...
+            // Global_f stores the value of the secret polynomiai f...
 
             int which_one;
 
@@ -1068,6 +1160,8 @@ int main()
             int zero_indication = 0;
             int finding_secret_coeff = 0;
 
+            // Here, we are collecting oracle responses in a very similar manner...
+
             for(int check1 = 0; check1 < 2; check1++)
             {
               int mul_value;
@@ -1085,12 +1179,6 @@ int main()
               no_queries = no_queries+1;
 
 
-              // f2 = fopen(ct_file_now, "a");
-              // for(int pp1=0;pp1<crypto_kem_CIPHERTEXTBYTES;pp1++)
-              // {
-              //   fprintf(f2,"%02x", ct[pp1]);
-              // }
-              // fclose(f2);
 
               if(global_mask == -1)
                 get_er_decrypt_array[0] = -1;
@@ -1106,11 +1194,22 @@ int main()
               count_get_er_decrypt_array_all = count_get_er_decrypt_array_all + 1;
 
 
+              #if (DO_PRINT == 1)
+
+              f2 = fopen(ct_file_now, "a");
+              for(int pp1=0;pp1<crypto_kem_CIPHERTEXTBYTES;pp1++)
+              {
+                fprintf(f2,"%02x", ct[pp1]);
+              }
+              fclose(f2);
+
               temp_temp_char = get_er_decrypt_array[0] & 0xFF;
 
-              // f2 = fopen(oracle_responses_now_file_name, "a");
-              // fprintf(f2,"%02x", temp_temp_char);
-              // fclose(f2);
+              f2 = fopen(oracle_responses_now_file_name, "a");
+              fprintf(f2,"%02x", temp_temp_char);
+              fclose(f2);
+
+              #endif
 
               check_for_value = mul_value * 2;
 
@@ -1118,14 +1217,6 @@ int main()
               crypto_kem_enc(ct, ss, pk);
               crypto_kem_dec(ss1, ct, sk);
               no_queries = no_queries+1;
-
-
-              // f2 = fopen(ct_file_now, "a");
-              // for(int pp1=0;pp1<crypto_kem_CIPHERTEXTBYTES;pp1++)
-              // {
-              //   fprintf(f2,"%02x", ct[pp1]);
-              // }
-              // fclose(f2);
 
               if(global_mask == -1)
                 get_er_decrypt_array[1] = -1;
@@ -1140,13 +1231,29 @@ int main()
 
               count_get_er_decrypt_array_all = count_get_er_decrypt_array_all + 1;
 
-              temp_temp_char = get_er_decrypt_array[1] & 0xFF;
+              #if (DO_PRINT == 1)
 
-              // f2 = fopen(oracle_responses_now_file_name, "a");
-              // fprintf(f2,"%02x", temp_temp_char);
-              // fclose(f2);
+                f2 = fopen(ct_file_now, "a");
+                for(int pp1=0;pp1<crypto_kem_CIPHERTEXTBYTES;pp1++)
+                {
+                  fprintf(f2,"%02x", ct[pp1]);
+                }
+                fclose(f2);
+
+                temp_temp_char = get_er_decrypt_array[1] & 0xFF;
+
+                f2 = fopen(oracle_responses_now_file_name, "a");
+                fprintf(f2,"%02x", temp_temp_char);
+                fclose(f2);
+
+              #endif
+
+              // This is to see if there are too many zero guesses... To see if the oracle's responses are skewed...This also indicates that the key
+              // recovery is not proceeding correctly...
 
               check_value_whether_correct = check_value_whether_correct + ((get_er_decrypt_array[0] ^ get_er_decrypt_array[1]) & 0x1);
+
+              // Here, we are analyzing the oracle's response....
 
               if(get_er_decrypt_array[0] == 0 && get_er_decrypt_array[1] == 0)
               {
@@ -1170,6 +1277,7 @@ int main()
                 }
                 else
                 {
+                  // Bad oracle responses....
                   rejected = 1;
                   printf("Oracle Values...\n");
                   goto rej;
@@ -1194,6 +1302,8 @@ int main()
                 }
                 else
                 {
+                  // Bad oracle responses....
+
                   rejected = 1;
                   printf("Oracle Values...\n");
                   goto rej;
@@ -1203,6 +1313,8 @@ int main()
               }
               else
               {
+                // Bad oracle responses....
+
                 rejected = 1;
                 printf("Oracle Values...\n");
                 goto rej;
@@ -1216,6 +1328,8 @@ int main()
             }
             else if(finding_secret_coeff == 0)
             {
+              // Bad oracle responses....
+
               rejected = 1;
               printf("Unreliable Values...\n");
               goto rej;
@@ -1248,7 +1362,9 @@ int main()
 
             #endif
 
-            // Checking whether we are doing attack correctly...
+            // Here, we are keeping track of the number of +/-1 , +/- 2 and 0 coefficients and if they seem to be skewed.... Then, you can reject and start the attakc again...
+            // The number of iterations after which you want to check is upto you...We choose 100 here... and the expected distribution of the values also can be chosen by you...
+
             if(no_coeffs_gone == 100)
             {
               printf("touch_0: %d, touch_1: %d, touch_2: %d\n", touch_0, touch_1, touch_2);
@@ -1263,10 +1379,16 @@ int main()
             no_coeffs_gone = no_coeffs_gone + 1;
           }
 
+          // Here, we have finished collecting oracle respones for all coefficients... also evading all the conditional checks for abortion...
+          // To recover the correct secret key, we need the collision value as well as the collision index...but attacker does not know both...
+          // So, we try all possible values of the collision value (+/- 2) and also the collision coefficient from 0 to p-1...
+
           int break_break = 0;
 
+          // Iterating over all collision indices...
           for(int coll_index = p-1; coll_index >= 0; coll_index--)
           {
+            // Iterating over all collision values...
             for(int coll_value = 0; coll_value  <= 1; coll_value++)
             {
 
@@ -1276,6 +1398,7 @@ int main()
               else
                 actual_coll_value = -1;
 
+              // Implementing the distinguisher table... for the first coefficient... This information is then used to recover the other coefficients...
 
               if(get_er_decrypt_array_all[0] == 0 && get_er_decrypt_array_all[1] == 0 && get_er_decrypt_array_all[2] == 0 && get_er_decrypt_array_all[3] == 0)
               {
@@ -1304,6 +1427,8 @@ int main()
               int coeff_now_1, coeff_now_2;
               int found_secret_coeff;
 
+              // Trying to analyze oracle response and getting the secret coefficients...
+
               for(int sec_index = p-1; sec_index >= 1; sec_index--)
               {
 
@@ -1326,6 +1451,8 @@ int main()
                   f_coeff_value = global_f[coeff_now_1] + global_f[coeff_now_2];
                   which_one = 2;
                 }
+
+                // Implementing the distinguisher table...
 
                 if(get_er_decrypt_array_all[((p-1)-sec_index+1)*4] == 0 && get_er_decrypt_array_all[((p-1)-sec_index+1)*4+1] == 0 && get_er_decrypt_array_all[((p-1)-sec_index+1)*4+2] == 0 && get_er_decrypt_array_all[((p-1)-sec_index+1)*4+3] == 0)
                 {
@@ -1362,6 +1489,8 @@ int main()
               int check_value = 0;
               int weight_fff = 0;
 
+              // Now, we check whether the recovered coefficients have a weight of w... according to the parameter set...
+
               for(int qw = 0; qw < p; qw++)
               {
                 weight_fff = weight_fff + abs(final_secret_coeffs[qw]);
@@ -1372,6 +1501,8 @@ int main()
                   break;
                 }
               }
+
+              // If so, then we have succeeded... Typically you have multiple choices for the secret polynomial... approximately 5 to 10...
 
               if(check_value == 0 && weight_fff == w)
               {
@@ -1413,48 +1544,6 @@ int main()
                   successful_attack_done = successful_attack_done+1;
                   printf("Success... Correct key recovered...\n");
 
-
-                  f2 = fopen(ct_file_now, "r");
-                  f3 = fopen(ct_file, "a");
-                  int ct_byte_now;
-                  for(int pp2 = 0; pp2 < (4*p); pp2++)
-                  {
-                    for(int pp=0;pp<crypto_kem_CIPHERTEXTBYTES;pp++)
-                    {
-                        fscanf(f2, "%02x", &ct_byte_now);
-                        fprintf(f3,"%02x", ct_byte_now);
-                    }
-                  }
-                  fclose(f2);
-                  fclose(f3);
-
-
-                  f2 = fopen(ct_file_now_basic, "r");
-                  f3 = fopen(ct_file_basic, "a");
-
-                  for(int pp=0;pp<crypto_kem_CIPHERTEXTBYTES;pp++)
-                  {
-                      fscanf(f2, "%02x", &ct_byte_now);
-                      fprintf(f3,"%02x", ct_byte_now);
-                  }
-
-
-                  fclose(f2);
-                  fclose(f3);
-
-
-                  f2 = fopen(oracle_responses_now_file_name, "r");
-                  f3 = fopen(oracle_responses_file_name, "a");
-
-                  for(int pp2 = 0; pp2 < (4*p); pp2++)
-                  {
-                        fscanf(f2, "%02x", &ct_byte_now);
-                        fprintf(f3,"%02x", ct_byte_now);
-                  }
-                  fclose(f2);
-                  fclose(f3);
-
-
                   printf("Success: %d/%d\n",success_rate,p);
                   printf("No of Queries: %d\n",no_queries + (profile_trials)*10);
 
@@ -1482,7 +1571,6 @@ int main()
 
     printf("profile_average: %f\n",profile_average_count);
     printf("trace_average: %f\n",trace_average_count);
-    #endif
 
     return KAT_SUCCESS;
 }

@@ -52,6 +52,9 @@ int main(void)
   unsigned char* k1 = (unsigned char*) malloc(NTRU_SHAREDKEYBYTES);
   unsigned char* k2 = (unsigned char*) malloc(NTRU_SHAREDKEYBYTES);
 
+  // This is where we set the value of the number of non-zero coefficients of the polynomial d1 (m) and d2 (n) in the base ciphertext...
+  // The value for M_VALUE and N_VALUE is set in the params.h file.
+
   m_attack = M_VALUE;
   n_attack = N_VALUE;
 
@@ -100,7 +103,7 @@ int main(void)
 
   // Here, we store the failed ciphertexts which do not correspond to any collision...
 
-  sprintf(ct_file_basic_failed,"ct_file_basic_failed_%d.bin");
+  sprintf(ct_file_basic_failed,"ct_file_basic_failed.bin");
 
   #endif
 
@@ -336,6 +339,8 @@ int main(void)
 
   for (int pq=0; pq<NO_TESTS; pq++)
   {
+
+    // Please note that the data is overwritten for every attack trial... So, only the data for the last trial will be stored...
 
     #if (DO_PRINT == 1)
 

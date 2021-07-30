@@ -39,8 +39,8 @@ static int shift_lfsr(unsigned int *lfsr, unsigned int polynomial_mask)
 static int get_random(void)
 {
     int temp;
-    unsigned int POLY_MASK_HERE_1 = 0x124312BE;
-    unsigned int POLY_MASK_HERE_2 = 0x55464784;
+    unsigned int POLY_MASK_HERE_1 = 0xAB65879A;
+    unsigned int POLY_MASK_HERE_2 = 0x56637263;
     static unsigned int lfsr_1 = 0x9FAB54EB;
     static unsigned int lfsr_2 = 0x5DEC9221;
     shift_lfsr(&lfsr_1, POLY_MASK_HERE_1);
@@ -496,6 +496,10 @@ static void KeyGen(Fq *h,small *f,small *ginv)
 #if (DO_ATTACK_COLLISION_NEW == 1)
 
 /* c = Encrypt(r,h) */
+
+// Procedure to Create Malformed Ciphertexts.... This encryption procedure can operate in different modes depending upon the
+// value of the variable "intended_function"...
+
 static void Encrypt(Fq *c,const small *r,const Fq *h)
 {
   Fq hr[p];
@@ -508,8 +512,13 @@ static void Encrypt(Fq *c,const small *r,const Fq *h)
 
   double result;
 
+  // If intended_function == 0, then we are trying to create ciphertexts for single collision... we are randomly choosing polynomials d1 and d2 for
+  // the ciphertext c...
+
   if(intended_function == 0)
   {
+
+      // Construct d1 = (x^i1 + x^i2 + .... + x^im)...
 
       for(int we1 = 0; we1 < p; we1++)
       {
@@ -522,16 +531,10 @@ static void Encrypt(Fq *c,const small *r,const Fq *h)
         int index;
         while(found == 0)
         {
-          // Choose random indices for each we1... (but should it be big???)
           int rand_value = (get_random()*256 + get_random());
           index = rand_value%p;
           if(index < 0)
             index = index + p;
-
-          // if(index < p/2)
-          //   found = 0;
-          // else
-          //   found = 1;
 
           if(index >= 0 && index < p)
             found = 1;
@@ -541,7 +544,8 @@ static void Encrypt(Fq *c,const small *r,const Fq *h)
         non_zero_f_coeff = index;
       }
 
-      // Construct power of x...
+      // Construct d2 = (x^j1 + x^j2 + .... + x^jn)...
+
 
       for(int we1 = 0; we1 < p; we1++)
       {
@@ -553,16 +557,11 @@ static void Encrypt(Fq *c,const small *r,const Fq *h)
         int index;
         while(found == 0)
         {
-          // Choose random indices for each we1... (but should it be big???)
           int rand_value = (get_random()*256 + get_random());
           index = rand_value%p;
           if(index < 0)
             index = index + p;
 
-          // if(index < (p/2))
-          //   found = 0;
-          // else
-          //   found = 1;
 
           if(index >= 0 && index < p)
             found = 1;
@@ -578,13 +577,12 @@ static void Encrypt(Fq *c,const small *r,const Fq *h)
         x_g_array_copy[yr] = x_g_array[yr];
       }
 
-      // Construct ciphertext c = c . x_f_array + c . x_g_array . h
+      // Construct ciphertext c = k1 . d1 + k2 . d2 . h where k1 = c_value_1 and k2 = c_value_2...
 
       Fq x_f_int[p];
       Fq x_g_int[p];
 
       Rq_mult_small(x_g_int,h,x_g_array_copy);
-
 
       int32 temp_value;
       for(int sd = 0; sd < p; sd++)
@@ -600,8 +598,12 @@ static void Encrypt(Fq *c,const small *r,const Fq *h)
 
   }
 
+  // Here, we build attack ciphertexts as c = (l1 . d1 + l2 . d2 . h + l3 . x^u) where d1 and d2 are from the base ciphertext...
+
   if(intended_function == 1)
   {
+
+    // Get d1 and d2 from x_f_array and x_g_array variables...
 
     for(int yr = 0; yr < p; yr++)
     {
@@ -609,14 +611,13 @@ static void Encrypt(Fq *c,const small *r,const Fq *h)
       x_g_array_copy[yr] = x_g_array[yr];
     }
 
-    // Construct ciphertext c = c . x_f_array + c . x_g_array . h
-
     Fq x_f_int[p];
     Fq x_g_int[p];
 
+    // Construct ciphertext c = l1 . d1 + l2 . d2 . h + l3 . x^u
+
     Rq_mult_small(x_g_int,h,x_g_array_copy);
 
-    // Should define the additional polynomial factor here...
 
     Fq x_f_attack_array[p];
 
@@ -697,125 +698,128 @@ static void Encrypt(Fq *c,const small *r,const Fq *h)
   }
 
 
+  //
+  // if(intended_function == 6)
+  // {
+  //
+  //   for(int yr = 0; yr < p; yr++)
+  //   {
+  //     x_f_array_copy[yr] = x_f_array[yr];
+  //     x_g_array_copy[yr] = x_g_array[yr];
+  //   }
+  //
+  //   // Construct ciphertext c = c . x_f_array + c . x_g_array . h
+  //
+  //   Fq x_f_int[p];
+  //   Fq x_g_int[p];
+  //
+  //   Rq_mult_small(x_g_int,h,x_g_array_copy);
+  //
+  //   // Should define the additional polynomial factor here...
+  //
+  //   Fq x_f_attack_array[p];
+  //
+  //   for(int gd = 0; gd<p; gd++)
+  //     x_f_attack_array[gd] = 0;
+  //
+  //   x_f_attack_array[sec_index] = 1;
+  //
+  //
+  //   int c_value_for_now;
+  //
+  //   if(check_for_value == 1)
+  //   {
+  //     c_value_for_now = c_value_for_attack_1;
+  //   }
+  //   else if(check_for_value == -1)
+  //   {
+  //     c_value_for_now = c_value_for_attack_1;
+  //   }
+  //   else if(check_for_value == 2)
+  //   {
+  //     c_value_for_now = c_value_for_attack_2;
+  //   }
+  //   else if(check_for_value == -2)
+  //   {
+  //     c_value_for_now = c_value_for_attack_2;
+  //   }
+  //
+  //   int c_value_for_now_1;
+  //   int c_value_for_now_2;
+  //   int c_value_for_now_3;
+  //
+  //   if(check_for_value == 1)
+  //   {
+  //     c_value_for_now_1 = c_value_for_attack_1_1;
+  //     c_value_for_now_2 = c_value_for_attack_1_2;
+  //     c_value_for_now_3 = c_value_for_attack_1_3;
+  //   }
+  //   else if(check_for_value == -1)
+  //   {
+  //     c_value_for_now_1 = c_value_for_attack_1_1;
+  //     c_value_for_now_2 = c_value_for_attack_1_2;
+  //     c_value_for_now_3 = c_value_for_attack_1_3;
+  //   }
+  //   else if(check_for_value == 2)
+  //   {
+  //     c_value_for_now_1 = c_value_for_attack_2_1;
+  //     c_value_for_now_2 = c_value_for_attack_2_2;
+  //     c_value_for_now_3 = c_value_for_attack_2_3;
+  //   }
+  //   else if(check_for_value == -2)
+  //   {
+  //     c_value_for_now_1 = c_value_for_attack_2_1;
+  //     c_value_for_now_2 = c_value_for_attack_2_2;
+  //     c_value_for_now_3 = c_value_for_attack_2_3;
+  //   }
+  //
+  //
+  //   int temp_value;
+  //   int mul_const;
+  //
+  //   if(check_for_value < 0)
+  //     mul_const = -1;
+  //   else
+  //     mul_const = 1;
+  //
+  //   for(int sd = 0; sd < p; sd++)
+  //   {
+  //     temp_value = (x_f_array[sd])*c_value_for_now_1 + (x_g_int[sd])*c_value_for_now_3 + (x_f_attack_array[sd]*mul_const*c_value_for_now_2);
+  //     hr[sd] = Fq_freeze(temp_value);
+  //   }
+  //
+  //   for(int i = 0; i < p; i++)
+  //     global_c_in_encrypt[i] = hr[i];
+  //
+  //   Round(c,hr);
+  //
+  // }
 
-  if(intended_function == 6)
-  {
-
-    for(int yr = 0; yr < p; yr++)
-    {
-      x_f_array_copy[yr] = x_f_array[yr];
-      x_g_array_copy[yr] = x_g_array[yr];
-    }
-
-    // Construct ciphertext c = c . x_f_array + c . x_g_array . h
-
-    Fq x_f_int[p];
-    Fq x_g_int[p];
-
-    Rq_mult_small(x_g_int,h,x_g_array_copy);
-
-    // Should define the additional polynomial factor here...
-
-    Fq x_f_attack_array[p];
-
-    for(int gd = 0; gd<p; gd++)
-      x_f_attack_array[gd] = 0;
-
-    x_f_attack_array[sec_index] = 1;
 
 
-    int c_value_for_now;
+  // if(intended_function == 2)
+  // {
+  //   int c_value_for_now;
+  //   c_value_for_now = c_value_for_leakage;
+  //
+  //   for(int sd = 0; sd < p; sd++)
+  //   {
+  //     hr[sd] = 0;
+  //   }
+  //   hr[0] = c_value_for_now;
+  //
+  //   for(int i = 0; i < p; i++)
+  //     global_c_in_encrypt[i] = hr[i];
+  //
+  //   Round(c,hr);
+  //
+  // }
 
-    if(check_for_value == 1)
-    {
-      c_value_for_now = c_value_for_attack_1;
-    }
-    else if(check_for_value == -1)
-    {
-      c_value_for_now = c_value_for_attack_1;
-    }
-    else if(check_for_value == 2)
-    {
-      c_value_for_now = c_value_for_attack_2;
-    }
-    else if(check_for_value == -2)
-    {
-      c_value_for_now = c_value_for_attack_2;
-    }
-
-    int c_value_for_now_1;
-    int c_value_for_now_2;
-    int c_value_for_now_3;
-
-    if(check_for_value == 1)
-    {
-      c_value_for_now_1 = c_value_for_attack_1_1;
-      c_value_for_now_2 = c_value_for_attack_1_2;
-      c_value_for_now_3 = c_value_for_attack_1_3;
-    }
-    else if(check_for_value == -1)
-    {
-      c_value_for_now_1 = c_value_for_attack_1_1;
-      c_value_for_now_2 = c_value_for_attack_1_2;
-      c_value_for_now_3 = c_value_for_attack_1_3;
-    }
-    else if(check_for_value == 2)
-    {
-      c_value_for_now_1 = c_value_for_attack_2_1;
-      c_value_for_now_2 = c_value_for_attack_2_2;
-      c_value_for_now_3 = c_value_for_attack_2_3;
-    }
-    else if(check_for_value == -2)
-    {
-      c_value_for_now_1 = c_value_for_attack_2_1;
-      c_value_for_now_2 = c_value_for_attack_2_2;
-      c_value_for_now_3 = c_value_for_attack_2_3;
-    }
-
-
-    int temp_value;
-    int mul_const;
-
-    if(check_for_value < 0)
-      mul_const = -1;
-    else
-      mul_const = 1;
-
-    for(int sd = 0; sd < p; sd++)
-    {
-      temp_value = (x_f_array[sd])*c_value_for_now_1 + (x_g_int[sd])*c_value_for_now_3 + (x_f_attack_array[sd]*mul_const*c_value_for_now_2);
-      hr[sd] = Fq_freeze(temp_value);
-    }
-
-    for(int i = 0; i < p; i++)
-      global_c_in_encrypt[i] = hr[i];
-
-    Round(c,hr);
-
-  }
-
-
-
-  if(intended_function == 2)
-  {
-    int c_value_for_now;
-    c_value_for_now = c_value_for_leakage;
-
-    for(int sd = 0; sd < p; sd++)
-    {
-      hr[sd] = 0;
-    }
-    hr[0] = c_value_for_now;
-
-    for(int i = 0; i < p; i++)
-      global_c_in_encrypt[i] = hr[i];
-
-    Round(c,hr);
-
-  }
+  // Here, we generate valid ciphertexts...
 
   if(intended_function == 3)
   {
+
     Rq_mult_small(hr,h,r);
 
     for(int i = 0; i < p; i++)
@@ -826,6 +830,9 @@ static void Encrypt(Fq *c,const small *r,const Fq *h)
   }
 
 
+  // Here, we generate the perturbed ciphertexts for the pre-processing phase, using the polynomials d1 and d2 generated for
+  // intended_function = 0...
+
   if(intended_function == 4)
   {
 
@@ -835,7 +842,6 @@ static void Encrypt(Fq *c,const small *r,const Fq *h)
         x_g_array_copy[yr] = x_g_array[yr];
       }
 
-      // Construct ciphertext c = c . x_f_array + c . x_g_array . h
 
       Fq x_f_int[p];
       Fq x_g_int[p];
@@ -860,35 +866,34 @@ static void Encrypt(Fq *c,const small *r,const Fq *h)
 
 
 
-  if(intended_function == 5)
-  {
-
-      for(int yr = 0; yr < p; yr++)
-      {
-        x_f_array_copy[yr] = x_f_array[yr];
-        x_g_array_copy[yr] = x_g_array[yr];
-      }
-
-      // Construct ciphertext c = c . x_f_array + c . x_g_array . h
-
-      Fq x_f_int[p];
-      Fq x_g_int[p];
-
-      Rq_mult_small(x_g_int,h,x_g_array_copy);
-
-      int32 temp_value;
-      for(int sd = 0; sd < p; sd++)
-      {
-        temp_value = (x_f_array[sd]*c_value_1_trimming) + (x_g_int[sd]*c_value_2_trimming);
-        hr[sd] = Fq_freeze(temp_value);
-      }
-
-
-      for(int i = 0; i < p; i++)
-        global_c_in_encrypt[i] = hr[i];
-
-      Round(c,hr);
-  }
+  // if(intended_function == 5)
+  // {
+  //
+  //     for(int yr = 0; yr < p; yr++)
+  //     {
+  //       x_f_array_copy[yr] = x_f_array[yr];
+  //       x_g_array_copy[yr] = x_g_array[yr];
+  //     }
+  //
+  //
+  //     Fq x_f_int[p];
+  //     Fq x_g_int[p];
+  //
+  //     Rq_mult_small(x_g_int,h,x_g_array_copy);
+  //
+  //     int32 temp_value;
+  //     for(int sd = 0; sd < p; sd++)
+  //     {
+  //       temp_value = (x_f_array[sd]*c_value_1_trimming) + (x_g_int[sd]*c_value_2_trimming);
+  //       hr[sd] = Fq_freeze(temp_value);
+  //     }
+  //
+  //
+  //     for(int i = 0; i < p; i++)
+  //       global_c_in_encrypt[i] = hr[i];
+  //
+  //     Round(c,hr);
+  // }
 
 
 

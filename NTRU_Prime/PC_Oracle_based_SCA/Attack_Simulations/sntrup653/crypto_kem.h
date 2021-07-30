@@ -39,17 +39,6 @@ int no_leakage_trials;
 
 #define DO_ATTACK_COLLISION_NEW 1
 
-// m = 1, n = 1...
-// #define GAP_THRESHOLD_1 133
-// #define GAP_THRESHOLD_2 116
-// #define C_VALUE_THRESHOLD 200
-
-// // m = 1, n = 2...
-// #define GAP_THRESHOLD_1 108
-// #define GAP_THRESHOLD_2 95
-// #define C_VALUE_THRESHOLD 200
-
-// m = 1, n = 3...
 #define GAP_THRESHOLD_1_1 60
 #define GAP_THRESHOLD_1_2 60
 #define GAP_THRESHOLD_2_1 120
