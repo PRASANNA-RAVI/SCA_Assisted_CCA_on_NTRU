@@ -35,6 +35,8 @@ if __name__ == "__main__":
 
 	key_pair_file = main_path + "keypair_file.bin"
 
+	print "Sending Key Pair to device..."
+
 	f = open(key_pair_file,"r")
 
 	for i in range(0,CRYPTO_PUBLICKEYBYTES):
@@ -145,7 +147,7 @@ if __name__ == "__main__":
 
 	f.close()
 
-	print "Querying the decapsulation device with valid ciphertext 200 times..."
+	print "Querying the decapsulation device with invalid ciphertext (valid ciphertext + base ciphertext) ciphertext 200 times..."
 
 
 	rep_count = 200

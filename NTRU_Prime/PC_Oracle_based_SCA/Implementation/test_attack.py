@@ -39,9 +39,16 @@ if __name__ == "__main__":
 	key_pair_file = main_path + "keypair_file.bin"
 	ct_file_basic = main_path + "ct_file_basic.bin"
 	ct_attack_file = main_path + "ct_file_attack.bin"
+
+	# This file contains the correct oracle responses which will lead to recovery of secret key.. We check if the oracle response
+	# received from device matches the oracle responses in this file...
 	oracle_response_file = main_path + "oracle_resp_sntrup761.bin"
 
+	# Sending Key Pair to device (Public, Private Key Pair to device)...
+
 	f = open(key_pair_file,"r")
+
+	print "Sending Key Pair to device..."
 
 	for i in range(0,CRYPTO_PUBLICKEYBYTES):
 		nibble1 = ord(f.read(1))
@@ -88,13 +95,16 @@ if __name__ == "__main__":
 
 	f1 = open(oracle_response_file,"r")
 
-	NUM_TRIALS = 100
+	NUM_TRIALS = 200
 
 	ct_zero = [0]*(2*P)
 	ct_zero_poly = [0]*(2*P)
 	ct_coll_poly = [0]*(2*P)
 
-	print "Starting Zero..."
+	# Asking device to decrypt zero ciphertext... zero ciphertext is generated internally within the target device by an encapsulation procedure...
+
+	print "Querying the decapsulation device with zero ciphertext 200 times..."
+
 	for i in range(0,NUM_TRIALS):
 		ser.write(chr(0x4F))
 
@@ -107,7 +117,8 @@ if __name__ == "__main__":
 		rcv_char = ord(ser.read())
 
 
-	print "Starting second..."
+	# Sending Base Ciphertext to device ...
+
 	ser.write(chr(0x42))
 	rcv_char = ord(ser.read())
 
@@ -131,6 +142,8 @@ if __name__ == "__main__":
 		ser.write(chr(byte_value))
 
 
+	print "Querying the decapsulation device with invalid base ciphertext 200 times..."
+
 	for i in range(0,NUM_TRIALS):
 		ser.write(chr(0x58))
 
@@ -141,6 +154,13 @@ if __name__ == "__main__":
 		print weight
 
 		rcv_char = ord(ser.read())
+
+	# Take t-test, get leakage points, then try to classify the attack traces...
+
+	# Sending Attack Ciphertexts to device ...
+
+
+	print ("Starting Attack Phase...")
 
 
 	oracle_response_array = [0]*(4*P)
