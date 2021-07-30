@@ -2,7 +2,7 @@
 
 This project contains the implementation and attack scripts required to perform
 generic side-channel assisted chosen-ciphertext attacks over NTRU-based KEMs. The particular schemes that have been targeted are:
-NTRU (main finalist candidate) and NTRU Prime (alternate finalist candidate) of the NIST standardization process for post-quantum cryptography. The attack is based on the paper available in this [link](). The repository is split into two parts, one each for NTRU and NTRU Prime. For NTRU, we include code for Plaintext-Checking (PC) Oracle-based SCA and for NTRU-Prime, we include code for Plaintext-Checking (PC) Oracle-based SCA and Decryption-Failure (DF) Oracle-based SCA. The scripts for each attack is divided into three directories:
+NTRU (main finalist candidate) and NTRU Prime (alternate finalist candidate) of the NIST standardization process for post-quantum cryptography. The repository is split into two parts, one each for NTRU and NTRU Prime. For NTRU, we include code for Plaintext-Checking (PC) Oracle-based SCA and for NTRU-Prime, we include code for Plaintext-Checking (PC) Oracle-based SCA and Decryption-Failure (DF) Oracle-based SCA. The scripts for each attack is divided into three directories:
 
 ## Attack_Simulations
 
