@@ -20,6 +20,7 @@ typedef struct{
 
 #define PAD32(X) ((((X) + 31)/32)*32)
 
+
 #define NTRU_Q (1 << NTRU_LOGQ)
 #define NTRU_WEIGHT (NTRU_Q/8 - 2)
 
@@ -43,17 +44,6 @@ typedef struct{
 #define NTRU_PUBLICKEYBYTES  (NTRU_OWCPA_PUBLICKEYBYTES)
 #define NTRU_SECRETKEYBYTES  (NTRU_OWCPA_SECRETKEYBYTES + NTRU_PRFKEYBYTES)
 #define NTRU_CIPHERTEXTBYTES (NTRU_OWCPA_BYTES)
-
-#define C_VALUE_THRESHOLD_1 20
-#define C_VALUE_THRESHOLD_2 20
-
-#define GAP_THRESHOLD_1_1 20
-#define GAP_THRESHOLD_1_2 20
-
-#define NO_TESTS 100
-
-#define M_VALUE 4
-#define N_VALUE 3
 
 uint32_t m_attack;
 uint32_t n_attack;

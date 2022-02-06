@@ -9,7 +9,7 @@ export LIBRARY_PATH=${LIBRARY_PATH+$LIBRARY_PATH:}/usr/local/opt/openssl@1.1/lib
 
 # Configuring the Script:
 
-There are several parameters available to configure the attack script. Firstly, there are several parameters for the attack, which can be found in `params.h` in the directory of the respective parameter sets. There are two important options. They are as follows:
+There are several parameters available to configure the attack script. Firstly, there are several parameters for the attack, which can be found in `attack_parameters.h` in the directory of the respective parameter sets. We have additional options for debug purposes and running the attack. The parameters for running the attack can be set in the `attack_parameters.h` file.
 
 * `DO_PRINT`: This option when turned on, prints the ciphertexts, keys, oracle responses onto the text file which will be useful while performing practical attacks. It generates five different files for a single attack iteration:
 
@@ -20,6 +20,12 @@ There are several parameters available to configure the attack script. Firstly, 
 - `ct_file_basic.bin` - Contains the attack ciphertexts
 
 These files are generated within the same directory after the run. We pre-generated files for a single attack iteration for `ntruhps2048677` and stored in the `SCA/Data_Files` folder.
+
+* `DO_ATTACK`: This option when turned off, only runs the pre-processing phase of the attack (i.e.) to identify the collision. This can be used to collect some statistics on the number of single collisions, multiple collisions, false positive and false negative collisions. This information is printed on the terminal.
+
+* `NO_TESTS`: Denotes the number of attack iterations to be run.
+
+These options can be turned on/off in the `attack_parameters.h` file in the folder of each parameter set.
 
 # To Compile
 

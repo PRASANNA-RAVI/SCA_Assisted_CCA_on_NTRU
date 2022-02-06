@@ -6,12 +6,12 @@ clear;
 % Input path of the traces here...
 
 % % Folder containing Profiling Traces...
-profile_path = '/Users/pace/Dropbox/NTU/Programs/Lattice_programs/My_codes/NTRU_work/SCACCAONNTRU/NTRU_Prime/PC_Oracle_based_SCA/SCA/Pre-Processing_Phase/';
+profile_path = './Pre-Processing_Phase/';
 % % Folder containing Attack Traces...
-attack_path = '/Users/pace/Dropbox/NTU/Programs/Lattice_programs/My_codes/NTRU_work/SCACCAONNTRU/NTRU_Prime/PC_Oracle_based_SCA/SCA/Attack_Phase/';
+attack_path = './Attack_Phase/';
 % % Folder containing Correct Oracle Response... This we use to match with
 % the side-channel's oracle response...
-oracle_file_name = '/Users/pace/Dropbox/NTU/Programs/Lattice_programs/My_codes/NTRU_work/SCACCAONNTRU/NTRU_Prime/PC_Oracle_based_SCA/SCA/Attack_Phase/oracle_response.mat';
+oracle_file_name = './Attack_Phase/oracle_response.mat';
 
 % Length of trace input here...
 % % Length of trace that we consider for analysis... Initial Point and
@@ -28,7 +28,7 @@ threshold_value = 7;
 
 % Input file names of the first trace set and second trace set...
 % Trace for ciphertext c = 0...
-first_file_name = 'traces_0';
+first_file_name = 'traces_20';
 % Trace for base ciphertext...
 second_file_name = 'traces_130';
 ext='.mat';
@@ -104,7 +104,7 @@ xlabel('Time Samples')
 ylabel('TVLA Value')
 legend('TVLA-Set1-Set2','TVLA-PASS-FAIL-Threshold')
 
-% Based on tvla value, we choose an appropriate threshold and choose those points as points of interest 
+% Based on tvla value, we choose an appropriate threshold and choose those points as points of interest
 % that are above and below a certain threshold. We then construct a
 % reduced trace and use the reduced trace to build a reduced template...
 
@@ -137,7 +137,7 @@ correct_traces=double(traces);
 for row_no = 1:1:size(traces,1)
     correct_traces(row_no, :) = correct_traces(row_no, :) - mean(correct_traces(row_no, :));
 end
-                
+
 for i = 1:1:leaky_points_no_negative
     sum_points = 0;
     for j = 1:1:no_traces_used
@@ -186,7 +186,7 @@ success = 0;
 load(oracle_file_name);
 
 for i = start_attack_files:1:end_attack_files
-    
+
     fform = 'traces_';
     ext='.mat';
     trace_no = num2str(i);
@@ -196,23 +196,23 @@ for i = start_attack_files:1:end_attack_files
     for row_no = 1:1:size(traces,1)
         traces(row_no, :) = traces(row_no, :) - mean(traces(row_no, :));
     end
-    
+
     current_trace = zeros(1,trace_length);
-    
+
     for j = 1:1:no_attack_traces_used
         index_now = randi(no_traces_in_file);
         trace_nnow = traces(index_now,:);
         current_trace = current_trace + trace_nnow;
     end
-    
+
     current_trace = current_trace/(no_attack_traces_used);
-    
+
     index = 1;
     for oo = 1:1:leaky_points_no_negative
         reduced_trace(index) = current_trace(leaky_indices_negative(oo));
         index = index+1;
     end
-    
+
     lsq_correct = ((mean_trace_correct - reduced_trace)*transpose(mean_trace_correct - reduced_trace));
     lsq_faulty = ((mean_trace_faulty - reduced_trace)*transpose(mean_trace_faulty - reduced_trace));
 
@@ -222,7 +222,7 @@ for i = start_attack_files:1:end_attack_files
 %     plot(mean_trace_correct,'b');
 %     plot(mean_trace_faulty,'r');
 %     plot(reduced_trace,'g');
-    
+
     if(lsq_correct < lsq_faulty)
         selection_array(i - start_attack_files +1) = 0;
         disp("0")
@@ -230,14 +230,11 @@ for i = start_attack_files:1:end_attack_files
         selection_array(i - start_attack_files +1) = 1;
         disp("1")
     end
-    
+
     if(selection_array(i - start_attack_files +1) == oracle_response_array(i + 1))
         success = success+1;
     end
-    
+
     success_string = sprintf("Success: %d/%d",success,(end_attack_files+1));
     success_string
 end
-
-
-

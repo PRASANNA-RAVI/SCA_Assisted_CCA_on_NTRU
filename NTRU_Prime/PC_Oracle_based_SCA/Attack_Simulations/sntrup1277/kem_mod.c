@@ -11,6 +11,11 @@
 #include "crypto_stream_aes256ctr.h"
 #endif
 
+#pragma GCC diagnostic ignored "-Wunused-variable"
+#pragma GCC diagnostic ignored "-Wunused-function"
+#pragma GCC diagnostic ignored "-Wparentheses-equality"
+#pragma GCC diagnostic ignored "-Wimplicit-int"
+
 #include "int8.h"
 #include "int16.h"
 #include "int32.h"
@@ -95,6 +100,8 @@ extern int c_value_1;
 extern int c_value_2;
 extern int c_value_for_attack_1;
 extern int c_value_for_attack_2;
+
+int no_true_collisions;
 
 int c_value_for_attack_1_1;
 int c_value_for_attack_1_2;
@@ -427,13 +434,13 @@ static void Short_random(small *out)
 
   uint32 r_value;
 
-  for (i = 0;i < p;++i) L[i] = urandom32();
+  // for (i = 0;i < p;++i) L[i] = urandom32();
 
-  // for (i = 0;i < p;++i)
-  // {
-  //   r_value = ((get_random()*256 + get_random())<<16) + (get_random()*256 + get_random());
-  //   L[i] = r_value;
-  // }
+  for (i = 0;i < p;++i)
+  {
+    r_value = ((get_random()*256 + get_random())<<16) + (get_random()*256 + get_random());
+    L[i] = r_value;
+  }
 
   Short_fromlist(out,L);
 }
@@ -444,14 +451,14 @@ static void Small_random(small *out)
 {
   int i;
 
-  for (i = 0;i < p;++i) out[i] = (((urandom32()&0x3fffffff)*3)>>30)-1;
+  // for (i = 0;i < p;++i) out[i] = (((urandom32()&0x3fffffff)*3)>>30)-1;
 
-  // uint32 r_value;
-  // for (i = 0;i < p;++i)
-  // {
-  //   r_value = ((get_random()*256 + get_random())<<16) + (get_random()*256 + get_random());
-  //   out[i] = (((r_value&0x3fffffff)*3)>>30)-1;
-  // }
+  uint32 r_value;
+  for (i = 0;i < p;++i)
+  {
+    r_value = ((get_random()*256 + get_random())<<16) + (get_random()*256 + get_random());
+    out[i] = (((r_value&0x3fffffff)*3)>>30)-1;
+  }
 
 }
 
@@ -509,6 +516,7 @@ static void Encrypt(Fq *c,const small *r,const Fq *h)
 
   if(intended_function == 0)
   {
+      // Construct power of x...
 
       for(int we1 = 0; we1 < p; we1++)
       {
@@ -521,10 +529,16 @@ static void Encrypt(Fq *c,const small *r,const Fq *h)
         int index;
         while(found == 0)
         {
+          // Choose random indices for each we1... (but should it be big???)
           int rand_value = (get_random()*256 + get_random());
           index = rand_value%p;
           if(index < 0)
             index = index + p;
+
+          // if(index < p/2)
+          //   found = 0;
+          // else
+          //   found = 1;
 
           if(index >= 0 && index < p)
             found = 1;
@@ -546,11 +560,16 @@ static void Encrypt(Fq *c,const small *r,const Fq *h)
         int index;
         while(found == 0)
         {
+          // Choose random indices for each we1... (but should it be big???)
           int rand_value = (get_random()*256 + get_random());
           index = rand_value%p;
           if(index < 0)
             index = index + p;
 
+          // if(index < (p/2))
+          //   found = 0;
+          // else
+          //   found = 1;
 
           if(index >= 0 && index < p)
             found = 1;
@@ -566,6 +585,8 @@ static void Encrypt(Fq *c,const small *r,const Fq *h)
         x_f_array_copy[yr] = x_f_array[yr];
         x_g_array_copy[yr] = x_g_array[yr];
       }
+
+      // Construct ciphertext c = c . x_f_array + c . x_g_array . h
 
       Fq x_f_int[p];
       Fq x_g_int[p];
@@ -584,6 +605,77 @@ static void Encrypt(Fq *c,const small *r,const Fq *h)
         global_c_in_encrypt[i] = hr[i];
 
       Round(c,hr);
+
+
+      // To Cross Check with known f and g...
+
+      Rq_mult_small(x_f_prod,x_f_array,global_f);
+      Rq_mult_small(x_g_prod,x_g_array,global_g);
+
+      // Now, we need to count the number of collisions...
+
+      int no_collisions_pos = 0;
+      int no_collisions_neg = 0;
+      int max_collision_value = (2*m + 2*n);
+
+      for(int hj = 0; hj < p; hj++)
+      {
+        int sum_value = x_f_prod[hj] + x_g_prod[hj];
+        if(sum_value >= max_collision_value)
+        {
+          no_collisions_pos = no_collisions_pos+1;
+        }
+        else if(sum_value <= -1*max_collision_value)
+        {
+          no_collisions_neg = no_collisions_neg+1;
+        }
+        // printf("[%d]: %d, ", hj, sum_value);
+      }
+      // printf("\n");
+
+      no_true_collisions = no_collisions_pos + no_collisions_neg;
+
+      printf("Pos vs Neg Coll: %d/%d\n", no_collisions_pos, no_collisions_neg);
+
+      // True collisions can be found here...
+      // False collisions in the value of e can be found here...
+
+
+      // Probability of Multiple collisions can also be calculated...
+      // Probability of False Positive Collisions can also be calculated...
+      // Probablility of False Negative Collisions can also be calculated...
+
+
+      // Rq_mult_small(x_f_prod,x_f_array,global_f);
+      // Rq_mult_small(x_g_prod,x_g_array,global_g);
+      //
+      //
+      // for(int hj = 0; hj < p; hj++)
+      // {
+      //   x_f_prod[hj] = Fq_freeze(3*x_f_prod[hj]);
+      // }
+      //
+      // for(int hj = 0; hj < p; hj++)
+      // {
+      //   x_f_prod[hj] = x_f_prod[hj] + x_g_prod[hj];
+      //   x_f_prod[hj] = Fq_freeze(c_value*x_f_prod[hj]);
+      // }
+      //
+      // // printf("Printing x_f_prod in attack..\n");
+      // // for(int df = 0; df < p; df++)
+      // // {
+      // //   printf("%d: %d, ", df, x_f_prod[df]);
+      // // }
+      // // printf("\n");
+      //
+      // R3_fromRq(er,x_f_prod);
+
+
+
+
+
+
+
   }
 
   if(intended_function == 1)
@@ -595,11 +687,14 @@ static void Encrypt(Fq *c,const small *r,const Fq *h)
       x_g_array_copy[yr] = x_g_array[yr];
     }
 
+    // Construct ciphertext c = c . x_f_array + c . x_g_array . h
+
     Fq x_f_int[p];
     Fq x_g_int[p];
 
     Rq_mult_small(x_g_int,h,x_g_array_copy);
 
+    // Should define the additional polynomial factor here...
 
     Fq x_f_attack_array[p];
 
@@ -708,14 +803,6 @@ static void Decrypt(small *r,const Fq *c,const small *f,const small *ginv)
   {
     er_decrypt[i] = e[i];
   }
-
-  // printf("Printing e...\n");
-  // for(i = 0; i < p; i++)
-  // {
-  //   if(abs(e[i]) > 0)
-  //     printf("[%d]: %d\n", i, e[i]);
-  // }
-  // printf("\n");
 
   R3_mult(ev,e,ginv);
   mask = Weightw_mask(ev); /* 0 if weight w, else -1 */

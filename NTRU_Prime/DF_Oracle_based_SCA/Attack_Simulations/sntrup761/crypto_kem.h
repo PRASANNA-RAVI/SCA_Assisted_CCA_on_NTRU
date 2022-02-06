@@ -25,32 +25,12 @@
 #define count_threshold 1
 #define index_threshold 0
 #define NO_COEFFS 10
-#define NO_TESTS 100
-
-
-#define M_VALUE 0
-#define N_VALUE 4
 
 int intended_function;
 int sec_index;
 int no_leakage_trials;
 
 #define DO_ATTACK_COLLISION_NEW 1
-
-#define GAP_THRESHOLD_1_1 60
-#define GAP_THRESHOLD_1_2 60
-
-#define GAP_THRESHOLD_2_1 105
-#define GAP_THRESHOLD_2_2 105
-
-#define C_VALUE_THRESHOLD_1 130
-#define C_VALUE_THRESHOLD_2 130
-
-#define C_VALUE_THRESHOLD_1_TRIMMER 5
-#define C_VALUE_THRESHOLD_2_TRIMMER 80
-
-#define C_VALUE_THRESHOLD_1_TRIMMER_LESS 20
-#define C_VALUE_THRESHOLD_1_TRIMMER_GREAT 40
 
 #define TRIALS_FOR_SHUFFLING 1
 #define TOTAL_COEFFS_TO_FIND (p-2)

@@ -9,3 +9,11 @@ This directory contains the implementation scripts for carrying out the attack o
 ## Attack Setup:
 
 We have included a small python script `test_attack.py` which can be used to carry out, both the pre-processing phase as well as the attack phase. It utilizes the key files, ciphertext files and oracle files in the `SCA/Data_Files` directory. The target implementation outputs the weight of the anchor variable as the oracle response and the python attack script uses the oracle response to retrieve the secret key.
+
+## Comments to Run:
+
+User should change the serial port within the python script in Line 20 of `test_attack.py`.
+
+## Run Command:
+
+- `python test_attack.py`

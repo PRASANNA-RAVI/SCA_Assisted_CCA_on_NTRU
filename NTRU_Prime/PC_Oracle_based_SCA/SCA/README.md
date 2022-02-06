@@ -10,3 +10,7 @@ This directory contains attack traces and scripts to carry out attack on NTRU. W
 
 * `tvla_simple_only.m` - This is used to compute the t-test on the traces from the pre-processing phase.
 * `attack_traces.m` - This is used to carry out the attack phase for key recovery.
+
+# Comments to Run:
+
+* MATLAB should be run from the SCA folder (folder can also be changed within MATLAB using cd command), because the paths used within the MATLAB file are referenced based on this.

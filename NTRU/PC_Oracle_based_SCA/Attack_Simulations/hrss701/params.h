@@ -42,17 +42,6 @@ typedef struct{
 #define NTRU_SECRETKEYBYTES  (NTRU_OWCPA_SECRETKEYBYTES + NTRU_PRFKEYBYTES)
 #define NTRU_CIPHERTEXTBYTES (NTRU_OWCPA_BYTES)
 
-#define C_VALUE_THRESHOLD_1 20
-#define C_VALUE_THRESHOLD_2 20
-
-#define GAP_THRESHOLD_1_1 20
-#define GAP_THRESHOLD_1_2 20
-
-#define NO_TESTS 100
-
-#define M_VALUE 4
-#define N_VALUE 2
-
 uint32_t m_attack;
 uint32_t n_attack;
 

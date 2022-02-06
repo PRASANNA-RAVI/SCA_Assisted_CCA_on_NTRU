@@ -1,7 +1,7 @@
 NTRU_NAMESPACE ?= ntru_
 
 CC ?= /usr/bin/cc
-CFLAGS = -O3 -fomit-frame-pointer -march=native -fPIC -fPIE -pie -g
+CFLAGS = -O3 -fomit-frame-pointer -march=native -fPIC -fPIE -pie -g -std=c99
 CFLAGS += -Wall -Wextra -Wpedantic
 CFLAGS += -DCRYPTO_NAMESPACE\(s\)=${NTRU_NAMESPACE}\#\#s
 

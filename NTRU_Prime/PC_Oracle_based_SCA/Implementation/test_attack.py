@@ -35,7 +35,7 @@ if __name__ == "__main__":
 	# ct_attack_file = main_path + "ct_file_sntrup761.bin"
 	# oracle_response_file = main_path + "oracle_resp_sntrup761.bin"
 
-	main_path = "/Users/pace/Dropbox/NTU/Programs/Lattice_programs/My_codes/NTRU_work/SCACCAONNTRU/NTRU_Prime/PC_Oracle_based_SCA/SCA/Data_Files/"
+	main_path = "../SCA/Data_Files/"
 	key_pair_file = main_path + "keypair_file.bin"
 	ct_file_basic = main_path + "ct_file_basic.bin"
 	ct_attack_file = main_path + "ct_file_attack.bin"
