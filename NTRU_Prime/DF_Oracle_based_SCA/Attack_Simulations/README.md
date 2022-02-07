@@ -31,7 +31,14 @@ These options can be turned on/off in the `attack_parameters.h` file in the fold
 
 # To Compile
 
-First, you need to go to the directory of the parameter set and run:
+You need to go to the directory of the target parameter set:
+
+* To clean the directory:
+```
+make clean
+```
+
+* To run:
 ```
 make
 ```
