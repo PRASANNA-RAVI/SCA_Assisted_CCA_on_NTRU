@@ -23,15 +23,15 @@ For scrutiny and reproducibility, we have made our implementation softwares avai
 
 ## Hardware and Software Required for Experiments:
 
-  * Operating system and version : MacBook Pro with 2.3 GHz Intel Core i5 processor running MacOS High Sierra (10.13.6).
-  * x86_64 GCC Compiler version: Apple LLVM version 10.0.0 (clang-1000.10.44.4)
-  * ARM GCC Compiler (arm-none-eabi-gcc) version: (GNU Tools for Arm Embedded Processors 7-2018-q2-update) 7.3.1 20180622 (release) [ARM/embedded-7-branch revision 261907]
-  * OpenSSL version: LibreSSL 2.2.7 (OpenSSL 1.1.1 required for running attack simulations)
-  * Matlab version: R2020a
-  * Python version: 2.7.10
-  * Python packages used: copy, gc, time, serial, random, struct, shlex, numpy, scipy.io, os, copy, sys, subprocess, datetime
-  * OpenOCD tool: To flash the binary onto the STM32F407VG microcontroller on the STM32F4 Discovery board.
-  * **pqm4** commit version: 6841a6bc3cc5bc0b0e01e5ee33567882e9bca8d3
+  * `Operating system` version : MacBook Pro with 2.3 GHz Intel Core i5 processor running MacOS High Sierra (10.13.6).
+  * `x86_64 GCC Compiler` version: Apple LLVM version 10.0.0 (clang-1000.10.44.4)
+  * `ARM GCC Compiler` (arm-none-eabi-gcc) version: (GNU Tools for Arm Embedded Processors 7-2018-q2-update) 7.3.1 20180622 (release) [ARM/embedded-7-branch revision 261907]
+  * `OpenSSL` version: LibreSSL 2.2.7 (OpenSSL 1.1.1 required for running attack simulations)
+  * `Matlab` version: R2020a
+  * `Python` version: 2.7.10
+  * `Python packages` used: copy, gc, time, serial, random, struct, shlex, numpy, scipy.io, os, copy, sys, subprocess, datetime
+  * `OpenOCD` tool: To flash the binary onto the STM32F407VG microcontroller on the STM32F4 Discovery board.
+  * `pqm4` commit version: 6841a6bc3cc5bc0b0e01e5ee33567882e9bca8d3
 
 ## License
 All code in this repository is released under the conditions of [CC0](http://creativecommons.org/publicdomain/zero/1.0/).
