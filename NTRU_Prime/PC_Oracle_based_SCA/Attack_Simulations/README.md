@@ -38,7 +38,7 @@ You need to go to the directory of the target parameter set:
 make clean
 ```
 
-* To run:
+* To compile:
 ```
 make
 ```
