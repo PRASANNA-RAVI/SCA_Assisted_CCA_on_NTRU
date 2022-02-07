@@ -7,6 +7,8 @@ export CPATH=${CPATH+$CPATH:}/usr/local/opt/openssl@1.1/include
 export LIBRARY_PATH=${LIBRARY_PATH+$LIBRARY_PATH:}/usr/local/opt/openssl@1.1/lib
 ```
 
+Please refer https://itectec.com/ubuntu/ubuntu-how-to-install-openssl-1-1-1-and-libssl-package/ for installation of OpenSSL 1.1.1 for Ubuntu. Please refer https://stackoverflow.com/questions/56639315/updating-openssl-to-1-1-1-on-macos for installation of OpenSSL 1.1.1 for MacOS.
+
 # Configuring the Script:
 
 There are several parameters available to configure the attack script. Firstly, there are several parameters for the attack, which can be found in the `attack_parameters.h` file in the directory of the respective parameter sets. We have several additional options for debug purposes and running the attack. The parameters for running the attack can be set in the `attack_parameters.h` file.
@@ -42,6 +44,8 @@ make clean
 ```
 make
 ```
+
+* Our attack simulations might run into segmentation faults due to want of more space. We would suggest to use the ulimit option available on Unix based machines to increase the available memory to run the attack simulation scripts. Please refer https://www.ibm.com/docs/en/cdfsp/7.6.1.1?topic=begin-setting-ulimit for more information. Please also refer https://wilsonmar.github.io/maximum-limits/ for setting ulimit on MacOS.
 
 # To Run
 ```

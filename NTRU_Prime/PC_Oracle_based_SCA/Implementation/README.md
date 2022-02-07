@@ -1,6 +1,6 @@
 # Implementation_scripts:
 
-This directory contains the implementation scripts for carrying out the attack on NTRU Prime. This setup can be directly used with your side-channel setup for trace acquisition and subsequently performing key recovery. This can be run on the STM32F407VG microcontroller based on the ARM Cortex-M4 microcontroller and the flow follows that of the **pqm4** library.
+This directory contains the implementation scripts for running the target implementation of NTRU Prime on the STM32F407VG microcontroller to obtain side-channel traces. This setup can be directly used with your side-channel setup for trace acquisition and subsequently performing key recovery. The implementation runs on the STM32F407VG microcontroller based on the ARM Cortex-M4 microcontroller and the flow follows that of the **pqm4** library.
 
 # Compilation Commands:
 
