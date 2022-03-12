@@ -5,10 +5,19 @@
 #include "../params.h"
 #include "../kem.h"
 #include "../poly.h"
+#include "../attack_parameters.h"
 
-// This setting is used to write the data to a text file for analysis... This need not be turned on to run attack simulations...
+#pragma GCC diagnostic ignored "-Wunused-variable"
+#pragma GCC diagnostic ignored "-Wunused-function"
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#pragma GCC diagnostic ignored "-Wparentheses-equality"
+#pragma GCC diagnostic ignored "-Wimplicit-int"
+#pragma GCC diagnostic ignored "-Wunused-label"
+#pragma GCC diagnostic ignored "-Wabsolute-value"
+#pragma GCC diagnostic ignored "-Wsign-compare"
+#pragma GCC diagnostic ignored "-Wunused-command-line-argument"
 
-#define DO_PRINT 0
+extern int no_true_collisions;
 
 extern uint32_t m_attack;
 extern uint32_t n_attack;
@@ -335,6 +344,17 @@ int main(void)
   int weight_hh;
   int profile_trials = 0;
 
+  int multiple_collision_count = 0;
+  int rounding_error_return = 0;
+  int count_non_zero_coeffs = 0;
+  int total_profile_trials_overall = 0;
+
+  int no_single_collisions = 0;
+  int no_multiple_collisions = 0;
+  int no_false_negative_collisions = 0;
+  int no_false_positive_collisions = 0;
+
+
   // Iterate over the number of tests you want to run... The NO_TESTS variable is defined in params.h header file...
 
   for (int pq=0; pq<NO_TESTS; pq++)
@@ -363,11 +383,23 @@ int main(void)
 
     int current_profile_trial = 0;
 
-    printf("************************************************************************************************************\n");
+    printf("*********************************************************Testing for New Key***************************************************\n");
 
     // Generate new key pair ...
 
     crypto_kem_keypair(pk, sk);
+
+
+    printf("Count of Single Collisions: %d\n", no_single_collisions);
+    printf("Count of Multiple Collisions: %d\n", no_multiple_collisions);
+    printf("Count of False Negative Collisions: %d\n", no_false_negative_collisions);
+    printf("Count of False Positive Collisions: %d\n", no_false_positive_collisions);
+    printf("Count of Trials Overall: %d\n", total_profile_trials_overall);
+
+    printf("Probability of Single Collisions: %f\n", ((float)no_single_collisions/total_profile_trials_overall));
+    printf("Probability of Multiple Collisions: %f\n", ((float)no_multiple_collisions/total_profile_trials_overall));
+    printf("Probability of False Negative Collisions: %f\n", ((float)no_false_negative_collisions/total_profile_trials_overall));
+    printf("Probability of False Positive Collisions: %f\n", ((float)no_false_positive_collisions/total_profile_trials_overall));
 
 
     #if (DO_PRINT == 1)
@@ -474,7 +506,12 @@ int main(void)
       crypto_kem_dec(k2, ct, sk);
 
       profile_trials = profile_trials+1;
+      total_profile_trials_overall = total_profile_trials_overall + 1;
+
       current_profile_trial = current_profile_trial + 1;
+
+
+
 
       // We realize an oracle using the variable mf... Refer line 433 in the decryption procedure in owcpa.c file...
       // We simple copy the mf variable to the extern_mf variable and this acts as our oracle...
@@ -490,12 +527,43 @@ int main(void)
         }
       }
 
+      printf("no_true_collisions: %d, no_non_zero_coeffs = %d\n", no_true_collisions, flag);
+
+      if(no_true_collisions == flag && flag == 1)
+      {
+        // Best case...
+        no_single_collisions = no_single_collisions + 1;
+
+        #if DO_ATTACK == 0
+          success_trial = 1;
+        #endif
+
+      }
+      if(no_true_collisions == flag && flag > 1)
+      {
+        // Multiple collisions...
+        no_multiple_collisions = no_multiple_collisions + 1;
+      }
+      // if(no_true_collisions != flag && no_true_collisions > flag)
+      // {
+      //   // False Negative Collision
+      //   no_false_negative_collisions = no_false_negative_collisions + 1;
+      // }
+      // if(no_true_collisions != flag && no_true_collisions < flag)
+      // {
+      //   // False Positive Collision
+      //   no_false_positive_collisions = no_false_positive_collisions + 1;
+      // }
+
+
       // If flag > 0, then you have got a ciphertext whose weight is greater than 0... Thus, we have got the base ciphertext cbase...
 
       if(flag > 0)
       {
 
-        success_trial = 1;
+        #if DO_ATTACK == 1
+          success_trial = 1;
+        #endif
 
         #if (DO_PRINT == 1)
 
@@ -527,6 +595,8 @@ int main(void)
 
       }
     }
+
+    #if DO_ATTACK == 1
 
     // We have now got the base ciphertext... Now, we can do the attack phase...
 
@@ -918,7 +988,7 @@ int main(void)
 
                   int avg_traces = (no_queries + profile_trials * 10)/(pq+1);
 
-                  printf("Average Traces: %d, profile = %d\n", avg_traces,profile_trials*10);
+                  printf("Average Traces: %d, profile = %d\n", avg_traces,(profile_trials*10));
 
                   for(int lfl = 0; lfl < NTRU_N; lfl++)
                   {
@@ -941,6 +1011,11 @@ int main(void)
         if(got_secret == 1)
           break;
       }
+
+      #else
+        got_secret = 1;
+      #endif
+
     }
   }
 

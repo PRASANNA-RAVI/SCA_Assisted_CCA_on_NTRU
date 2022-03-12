@@ -16,7 +16,7 @@ import subprocess
 import datetime
 
 if __name__ == "__main__":
-
+	# User should change the serial port here based on device requirements...
 	ser = serial.Serial(port='/dev/tty.usbserial-FTBNZ0TN',baudrate=115200,timeout=10)
 
 	CRYPTO_SECRETKEYBYTES = 1763
@@ -31,7 +31,7 @@ if __name__ == "__main__":
 	rcv_char = ord(ser.read())
 	print rcv_char
 
-	main_path = "/Users/pace/Dropbox/NTU/Programs/Lattice_programs/My_codes/NTRU_work/SCACCAONNTRU/NTRU_Prime/DF_Oracle_based_SCA/SCA/Data_Files/"
+	main_path = "../SCA/Data_Files/"
 
 	key_pair_file = main_path + "keypair_file.bin"
 

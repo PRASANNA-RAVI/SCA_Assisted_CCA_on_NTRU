@@ -11,6 +11,11 @@
 #include "crypto_stream_aes256ctr.h"
 #endif
 
+#pragma GCC diagnostic ignored "-Wunused-variable"
+#pragma GCC diagnostic ignored "-Wunused-function"
+#pragma GCC diagnostic ignored "-Wparentheses-equality"
+#pragma GCC diagnostic ignored "-Wimplicit-int"
+
 #include "int8.h"
 #include "int16.h"
 #include "int32.h"
@@ -39,7 +44,7 @@ static int shift_lfsr(unsigned int *lfsr, unsigned int polynomial_mask)
 static int get_random(void)
 {
     int temp;
-    unsigned int POLY_MASK_HERE_1 = 0xAB65879A;
+    unsigned int POLY_MASK_HERE_1 = 0x12345645;
     unsigned int POLY_MASK_HERE_2 = 0x56637263;
     static unsigned int lfsr_1 = 0x9FAB54EB;
     static unsigned int lfsr_2 = 0x5DEC9221;
@@ -78,6 +83,8 @@ static int int16_negative_mask(int16 x)
 
 /* ----- arithmetic mod 3 */
 
+
+int no_true_collisions;
 
 extern int intended_function;
 extern int sec_index;
@@ -595,6 +602,43 @@ static void Encrypt(Fq *c,const small *r,const Fq *h)
         global_c_in_encrypt[i] = hr[i];
 
       Round(c,hr);
+
+
+
+
+
+      // To Cross Check with known f and g...
+
+      Rq_mult_small(x_f_prod,x_f_array,global_f);
+      Rq_mult_small(x_g_prod,x_g_array,global_g);
+
+      // Now, we need to count the number of collisions...
+
+      int no_collisions_pos = 0;
+      int no_collisions_neg = 0;
+      int max_collision_value = (2*m + 2*n);
+
+      for(int hj = 0; hj < p; hj++)
+      {
+        int sum_value = x_f_prod[hj] + x_g_prod[hj];
+        if(sum_value >= max_collision_value)
+        {
+          no_collisions_pos = no_collisions_pos+1;
+        }
+        else if(sum_value <= -1*max_collision_value)
+        {
+          no_collisions_neg = no_collisions_neg+1;
+        }
+        // printf("[%d]: %d, ", hj, sum_value);
+      }
+      // printf("\n");
+
+      no_true_collisions = no_collisions_pos + no_collisions_neg;
+
+      printf("Pos vs Neg Coll: %d/%d\n", no_collisions_pos, no_collisions_neg);
+
+
+
 
   }
 

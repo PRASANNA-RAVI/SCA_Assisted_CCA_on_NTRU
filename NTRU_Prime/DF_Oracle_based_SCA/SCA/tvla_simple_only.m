@@ -25,7 +25,7 @@ first_file_name = 'traces_0';
 ext='.mat';
 
 %  Path containing traces for candidates for base ciphertext..
-path = '/Users/pace/Dropbox/NTU/Programs/Lattice_programs/My_codes/NTRU_work/SCACCAONNTRU/NTRU_Prime/DF_Oracle_based_SCA/SCA/Pre-Processing_Phase/';
+path = './Pre-Processing_Phase/';
 
 
 % We have traces captured for a total of 321 different ciphertexts...
@@ -65,33 +65,33 @@ total_traces = length(start_rep_file_count:1:rep_file_count);
 tvla_array_set = zeros(total_traces,trace_length);
 
 for jg = start_rep_file_count:1:rep_file_count
- 
+
     second_file_name = sprintf('traces_%d',jg);
     n = 0;
     fname=[path second_file_name ext];
     disp(['Reading ' fname]);
     load(fname);
     traces=double(traces(second_no_traces_used_start:second_no_traces_used_end,trace_start_point:trace_length));
-    
+
     for row_no = 1:1:size(traces,1)
         traces(row_no, :) = traces(row_no, :) - mean(traces(row_no, :));
     end
-    
+
     X=sum(traces);
     X2=sum(traces.^2);
     n=n+size(traces,1);
     clear traces;
-    
+
     m_X=X/n;
     v_X=(X2-(X.^2/n))/(n-1);
     v_Xn=v_X/n;
-    
+
     m_CKRP=m_X;
     v_CKRP=abs(v_X);
     v_CKRP_n=v_Xn;
-    
+
     tvla1= (m_CKRP-m_CKCP)./sqrt(v_CKCP/n+v_CKRP/n);
-    
+
     plot(tvla1(1:trace_length - trace_start_point+1))
     hold on
     plot([0,trace_length - trace_start_point+1],[5,5],'k')
@@ -101,4 +101,3 @@ for jg = start_rep_file_count:1:rep_file_count
     legend('TVLA-Set1-Set2','TVLA-PASS-FAIL-Threshold')
     tvla_array_set(jg,:) = tvla1;
 end
-

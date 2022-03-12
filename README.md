@@ -17,5 +17,21 @@ We have included a wrapper which can help carry out the entire attack. This can 
 
 This directory includes practical side-channel traces (taken from the EM side-channel from the ARM Cortex-M4 microcontroller) as well as attack scripts (written in MATLAB) to analyze the traces for key recovery.
 
+## Availability of Software:
+
+For scrutiny and reproducibility, we have made our implementation softwares available  at \url{https://github.com/PRASANNA-RAVI/SCA_Assisted_CCA_on_NTRU}.
+
+## Hardware and Software Required for Experiments:
+
+  * `Operating system` version : MacBook Pro with 2.3 GHz Intel Core i5 processor running MacOS High Sierra (10.13.6).
+  * `x86_64 GCC Compiler` version: Apple LLVM version 10.0.0 (clang-1000.10.44.4)
+  * `ARM GCC Compiler` (arm-none-eabi-gcc) version: (GNU Tools for Arm Embedded Processors 7-2018-q2-update) 7.3.1 20180622 (release) [ARM/embedded-7-branch revision 261907]
+  * `OpenSSL` version: LibreSSL 2.2.7 (OpenSSL 1.1.1 required for running attack simulations). Please refer README document in NTRU_Prime/PC_Oracle_based_SCA/Attack_Simulations folder on installation instructions.
+  * `Matlab` version: R2020a
+  * `Python` version: 2.7.10
+  * `Python packages` used: copy, gc, time, serial, random, struct, shlex, numpy, scipy.io, os, sys, subprocess, datetime, pyserial
+  * `OpenOCD` tool: To flash the binary onto the STM32F407VG microcontroller on the STM32F4 Discovery board.
+  * `pqm4` commit version: 6841a6bc3cc5bc0b0e01e5ee33567882e9bca8d3 (Inside pqm4 directory, please use command `git checkout 6841a6bc3cc5bc0b0e01e5ee33567882e9bca8d3` to view code corresponding to this commit)
+
 ## License
 All code in this repository is released under the conditions of [CC0](http://creativecommons.org/publicdomain/zero/1.0/).

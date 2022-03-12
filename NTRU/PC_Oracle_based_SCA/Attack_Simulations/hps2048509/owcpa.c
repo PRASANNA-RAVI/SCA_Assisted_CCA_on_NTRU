@@ -3,6 +3,19 @@
 #include "sample.h"
 #include <stdio.h>
 
+#pragma GCC diagnostic ignored "-Wunused-variable"
+#pragma GCC diagnostic ignored "-Wunused-function"
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#pragma GCC diagnostic ignored "-Wparentheses-equality"
+#pragma GCC diagnostic ignored "-Wimplicit-int"
+#pragma GCC diagnostic ignored "-Wunused-label"
+#pragma GCC diagnostic ignored "-Wabsolute-value"
+#pragma GCC diagnostic ignored "-Wsign-compare"
+#pragma GCC diagnostic ignored "-Wunused-command-line-argument"
+
+
+int no_true_collisions;
+
 extern poly y_extern_mf;
 extern poly y1, y2;
 extern poly x7, x8;
@@ -200,6 +213,10 @@ void owcpa_enc(unsigned char *c,
                const poly *m,
                const unsigned char *pk)
 {
+
+  int count_non_zero_x_f_array_coeffs;
+  int count_non_zero_x_g_array_coeffs;
+
   int i;
   poly x1, x2;
   poly *h = &x1, *liftm = &x1;
@@ -220,48 +237,100 @@ void owcpa_enc(unsigned char *c,
 
   // If intended_function == 0, then we are trying to create ciphertexts for single collision...
 
+
+  int found_x_f_array = 0;
+  int found_x_g_array = 0;
+
   if(intended_function == 0)
   {
     rej0:
 
-    // Construct d1 = (x^i1 + x^i2 + .... + x^im)...
+    found_x_f_array = 0;
+    found_x_g_array = 0;
 
-    for(int we1 = 0; we1 < NTRU_N; we1++)
+    count_non_zero_x_f_array_coeffs = 0;
+    count_non_zero_x_g_array_coeffs = 0;
+
+    while(found_x_f_array == 0)
     {
-      x_f_array->coeffs[we1] = 0;
+      count_non_zero_x_f_array_coeffs = 0;
+
+      // Construct d1 = (x^i1 + x^i2 + .... + x^im)...
+
+      for(int we1 = 0; we1 < NTRU_N; we1++)
+      {
+        x_f_array->coeffs[we1] = 0;
+      }
+
+      // printf("Stuck in finding x_f_array...\n");
+
+      for(int we1 = 0; we1 < m_attack; we1++)
+      {
+        int index;
+        int rand_value = (get_random()*256 + get_random());
+        index = rand_value % (NTRU_N);
+        if(index < 0)
+          index = index + NTRU_N;
+
+        if(we1%2 == 0)
+          x_f_array->coeffs[index] = 1;
+        else
+          x_f_array->coeffs[index] = NTRU_Q - 1;
+      }
+
+      for(int we1 = 0; we1 < NTRU_N; we1++)
+      {
+        if(x_f_array->coeffs[we1] != 0)
+          count_non_zero_x_f_array_coeffs = count_non_zero_x_f_array_coeffs+1;
+      }
+
+      if(count_non_zero_x_f_array_coeffs == m_attack)
+      {
+        found_x_f_array = 1;
+      }
+
+      // printf("count_non_zero_x_f_array_coeffs: %d\n", count_non_zero_x_f_array_coeffs);
+
     }
 
-    for(int we1 = 0; we1 < m_attack; we1++)
+    while(found_x_g_array == 0)
     {
-      int index;
+      count_non_zero_x_g_array_coeffs = 0;
 
-      int rand_value = (get_random()*256 + get_random());
-      index = rand_value % (NTRU_N);
-      if(index < 0)
-        index = index + NTRU_N;
+      // Construct d2 = (x^j1 + x^j2 + .... + x^jn)...
 
-      if(we1%2 == 0)
-        x_f_array->coeffs[index] = 1;
-      else
-        x_f_array->coeffs[index] = NTRU_Q - 1;
-    }
+      for(int we1 = 0; we1 < NTRU_N; we1++)
+      {
+        x_g_array->coeffs[we1] = 0;
+      }
 
-    // Construct d2 = (x^j1 + x^j2 + .... + x^jn)...
+      // printf("Stuck in finding x_g_array...\n");
 
-    for(int we1 = 0; we1 < NTRU_N; we1++)
-    {
-      x_g_array->coeffs[we1] = 0;
-    }
-    for(int we1 = 0; we1 < n_attack; we1++)
-    {
-      int index;
+      for(int we1 = 0; we1 < n_attack; we1++)
+      {
+        int index;
 
-      int rand_value = (get_random()*256 + get_random());
-      index = rand_value%NTRU_N;
-      if(index < 0)
-        index = index + NTRU_N;
+        int rand_value = (get_random()*256 + get_random());
+        index = rand_value%NTRU_N;
+        if(index < 0)
+          index = index + NTRU_N;
 
-      x_g_array->coeffs[index] = 1;
+        x_g_array->coeffs[index] = 1;
+      }
+
+
+      for(int we1 = 0; we1 < NTRU_N; we1++)
+      {
+        if(x_g_array->coeffs[we1] != 0)
+          count_non_zero_x_g_array_coeffs = count_non_zero_x_g_array_coeffs+1;
+      }
+
+      if(count_non_zero_x_g_array_coeffs == n_attack)
+      {
+        found_x_g_array = 1;
+      }
+
+      // printf("count_non_zero_x_g_array_coeffs: %d\n", count_non_zero_x_g_array_coeffs);
     }
 
     for(int yr = 0; yr < NTRU_N; yr++)
@@ -280,6 +349,37 @@ void owcpa_enc(unsigned char *c,
       temp_value = (x_f_array->coeffs[sd]*c_value_1) + (x_g_int->coeffs[sd]*c_value_2);
       ct->coeffs[sd] = MODQ(temp_value);
     }
+
+
+    // To Cross Check with known f and g...
+
+    poly_Rq_mul(x_f_prod,x_f_array,global_f);
+    poly_Rq_mul(x_g_prod,x_g_array,global_g);
+
+    // Now, we need to count the number of collisions...
+
+    int no_collisions_pos = 0;
+    int no_collisions_neg = 0;
+    int max_collision_value_pos = (m_attack + n_attack);
+    int max_collision_value_neg = NTRU_Q - (m_attack + n_attack);
+
+    // printf("Printing Sum Value...\n");
+    for(int hj = 0; hj < NTRU_N; hj++)
+    {
+      int sum_value = MODQ(x_f_prod->coeffs[hj] + x_g_prod->coeffs[hj]);
+      // printf("[%d]: %d, ", hj, sum_value);
+      if(sum_value == max_collision_value_pos)
+      {
+        no_collisions_pos = no_collisions_pos+1;
+      }
+      else if(sum_value == max_collision_value_neg)
+      {
+        no_collisions_neg = no_collisions_neg+1;
+      }
+    }
+
+    no_true_collisions = no_collisions_pos + no_collisions_neg;
+    printf("Pos vs Neg Coll: %d/%d\n", no_collisions_pos, no_collisions_neg);
 
   }
 
@@ -366,14 +466,24 @@ void owcpa_enc(unsigned char *c,
   }
 
   // If not, reject it and start again...
-  
+
   if(summ != 0)
   {
     if(intended_function == 0)
+    {
       goto rej0;
+    }
     else if(intended_function == 1)
       printf("Attack Failed...\n");
   }
+
+
+  // printf("Printing c in encrypt...\n");
+  // for(int hfh = 0; hfh < NTRU_N; hfh++)
+  // {
+  //   printf("%d, ", ct->coeffs[hfh]);
+  // }
+  // printf("\n");
 
   poly_Rq_sum_zero_tobytes(c, ct);
 

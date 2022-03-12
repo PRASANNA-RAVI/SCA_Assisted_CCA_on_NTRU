@@ -10,12 +10,19 @@
 #include <string.h>
 #include "rng.h"
 #include "crypto_kem.h"
+#include "attack_parameters.h"
 #include "math.h"
 #include "int8.h"
 #include "int16.h"
 #include "int32.h"
 #include "uint16.h"
 #include "uint32.h"
+
+#pragma GCC diagnostic ignored "-Wunused-variable"
+#pragma GCC diagnostic ignored "-Wunused-function"
+#pragma GCC diagnostic ignored "-Wparentheses-equality"
+#pragma GCC diagnostic ignored "-Wimplicit-int"
+#pragma GCC diagnostic ignored "-Wunused-label"
 
 double mean_now = 0;
 double std_dev = 2;
@@ -153,6 +160,7 @@ static uint8_t hw_calc(int8_t byte)
 int intended_function;
 int sec_index;
 
+extern int no_true_collisions;
 extern int check_for_value;
 extern int collision_index;
 extern int collision_value;
@@ -513,6 +521,16 @@ int main()
     if (!sk) sk = malloc(crypto_kem_SECRETKEYBYTES);
     if (!sk) abort();
 
+    int multiple_collision_count = 0;
+    int rounding_error_return = 0;
+    int count_non_zero_coeffs = 0;
+    int total_profile_trials_overall = 0;
+
+    int no_single_collisions = 0;
+    int no_multiple_collisions = 0;
+    int no_false_negative_collisions = 0;
+    int no_false_positive_collisions = 0;
+
 
     for (int pq=0; pq<NO_TESTS; pq++)
     {
@@ -564,6 +582,26 @@ int main()
         #endif
 
 
+        // total_profile_trials_overall
+        // no_single_collisions
+        // no_multiple_collisions
+        // no_false_negative_collisions
+        // no_false_positive_collisions
+
+        printf("Count of Single Collisions: %d\n", no_single_collisions);
+        printf("Count of Multiple Collisions: %d\n", no_multiple_collisions);
+        printf("Count of False Negative Collisions: %d\n", no_false_negative_collisions);
+        printf("Count of False Positive Collisions: %d\n", no_false_positive_collisions);
+        printf("Count of Trials Overall: %d\n", total_profile_trials_overall);
+
+        printf("Probability of Single Collisions: %f\n", ((float)no_single_collisions/total_profile_trials_overall));
+        printf("Probability of Multiple Collisions: %f\n", ((float)no_multiple_collisions/total_profile_trials_overall));
+        printf("Probability of False Negative Collisions: %f\n", ((float)no_false_negative_collisions/total_profile_trials_overall));
+        printf("Probability of False Positive Collisions: %f\n", ((float)no_false_positive_collisions/total_profile_trials_overall));
+
+
+
+
         int successful_attack_done = 0;
 
         int no_queries = 0;
@@ -592,6 +630,12 @@ int main()
 
           if(reached == 1 && success_touch == 0)
           {
+            if(count_non_zero_coeffs == 1)
+            {
+              rounding_error_return = rounding_error_return + 1;
+            }
+
+
             oracle_response_count = oracle_response_count - 4*p;
             match_success = 0;
 
@@ -627,6 +671,11 @@ int main()
 
           if(rejected == 1)
           {
+
+            if(count_non_zero_coeffs == 0)
+            {
+              rounding_error_return = rounding_error_return + 1;
+            }
 
             oracle_response_count = oracle_response_count - now_response_count;
             now_response_count = 0;
@@ -667,6 +716,7 @@ int main()
             // Build a base ciphertext c = k1 . d1 + k2. d2. h... Try to see if you can identify a collision...
 
             profile_trials = profile_trials + 1;
+            total_profile_trials_overall = total_profile_trials_overall + 1;
 
             int got_minus_one = 0;
             int got_zero = 0;
@@ -691,6 +741,45 @@ int main()
             }
 
             #endif
+
+            count_non_zero_coeffs = 0;
+            for(int i = 0; i < p; i++)
+            {
+              if(er_decrypt[i] == 1 || er_decrypt[i] == -1)
+                count_non_zero_coeffs = count_non_zero_coeffs+1;
+            }
+
+
+            if(no_true_collisions == count_non_zero_coeffs &&  no_true_collisions == 1)
+            {
+              // Best case...
+              no_single_collisions = no_single_collisions + 1;
+              #if DO_ATTACK == 0
+                got_minus_one = 1;
+              #endif
+            }
+            if(no_true_collisions == count_non_zero_coeffs && no_true_collisions > 1)
+            {
+              // Multiple collisions...
+              no_multiple_collisions = no_multiple_collisions + 1;
+            }
+            if(no_true_collisions != count_non_zero_coeffs && no_true_collisions > count_non_zero_coeffs)
+            {
+              // False Negative Collision
+              no_false_negative_collisions = no_false_negative_collisions + 1;
+            }
+            if(no_true_collisions != count_non_zero_coeffs && no_true_collisions < count_non_zero_coeffs)
+            {
+              // False Positive Collision
+              no_false_positive_collisions = no_false_positive_collisions + 1;
+            }
+
+
+            // #if (COLL_CHECK == 1)
+            //
+            // // printf("No of Non-Zero Coefficients: %d\n", count_non_zero_coeffs);
+            //
+            // #endif
 
             succ_flag = 0;
 
@@ -721,7 +810,9 @@ int main()
 
             if(count_minus_ones > 0)
             {
-              got_minus_one = 1;
+              #if DO_ATTACK == 1
+                got_minus_one = 1;
+              #endif
 
               // Getting colliding index and colliding value from e...
 
@@ -779,6 +870,8 @@ int main()
             }
 
           }
+
+          #if (DO_ATTACK == 1)
 
           // We have now got the base ciphertext... Now, we can do the attack phase...
 
@@ -1502,6 +1595,10 @@ int main()
 
           printf("Profile Aveage: %fn",profile_average_count/(pq+1));
           printf("Trace Average: %f\n",trace_average_count/(pq+1));
+
+          #else
+            successful_attack_done = successful_attack_done + 1;
+          #endif
 
         }
     }

@@ -3,6 +3,19 @@
 #include "sample.h"
 #include <stdio.h>
 
+#pragma GCC diagnostic ignored "-Wunused-variable"
+#pragma GCC diagnostic ignored "-Wunused-function"
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#pragma GCC diagnostic ignored "-Wparentheses-equality"
+#pragma GCC diagnostic ignored "-Wimplicit-int"
+#pragma GCC diagnostic ignored "-Wunused-label"
+#pragma GCC diagnostic ignored "-Wabsolute-value"
+#pragma GCC diagnostic ignored "-Wsign-compare"
+#pragma GCC diagnostic ignored "-Wunused-command-line-argument"
+
+
+int no_true_collisions;
+
 extern poly y_extern_mf;
 extern poly y1, y2;
 extern poly x7, x8;
@@ -131,11 +144,13 @@ void owcpa_keypair(unsigned char *pk,
 {
   int i;
 
-  poly x1, x2, x3, x4, x5;
+  poly x1, x2, x3, x4, x5, x6;
 
   poly *f=&x1, *g=&x2, *invf_mod3=&x3;
   poly *gf=&x3, *invgf=&x4, *tmp=&x5;
   poly *invh=&x3, *h=&x3;
+
+  poly *g_copy = &x6;
 
   sample_fg(f,g,seed);
 
@@ -157,17 +172,30 @@ void owcpa_keypair(unsigned char *pk,
   }
   printf("\n");
 
-  for(int hfh = 0; hfh < NTRU_N; hfh++)
-  {
-    global_g->coeffs[hfh] = g->coeffs[hfh];
-  }
-
 
 #ifdef NTRU_HRSS
+
+for(int hfh = 0; hfh < NTRU_N; hfh++)
+{
+  g_copy->coeffs[hfh] = g->coeffs[hfh];
+}
+
+/* g = (x-1)*g */
+for(i=NTRU_N-1; i>0; i--)
+  g_copy->coeffs[i] = (g_copy->coeffs[i-1] - g_copy->coeffs[i]);
+g_copy->coeffs[0] = -(g_copy->coeffs[0]);
+
+
+for(int hfh = 0; hfh < NTRU_N; hfh++)
+{
+  global_g->coeffs[hfh] = g_copy->coeffs[hfh];
+}
+
   /* g = 3*(x-1)*g */
   for(i=NTRU_N-1; i>0; i--)
     g->coeffs[i] = 3*(g->coeffs[i-1] - g->coeffs[i]);
   g->coeffs[0] = -(3*g->coeffs[0]);
+
 #endif
 
 #ifdef NTRU_HPS
@@ -280,6 +308,37 @@ void owcpa_enc(unsigned char *c,
       temp_value = (x_f_array->coeffs[sd]*c_value_1) + (x_g_int->coeffs[sd]*c_value_2);
       ct->coeffs[sd] = MODQ(temp_value);
     }
+
+
+    // To Cross Check with known f and g...
+
+    poly_Rq_mul(x_f_prod,x_f_array,global_f);
+    poly_Rq_mul(x_g_prod,x_g_array,global_g);
+
+    // Now, we need to count the number of collisions...
+
+    int no_collisions_pos = 0;
+    int no_collisions_neg = 0;
+    int max_collision_value_pos = (m_attack + 2*n_attack);
+    int max_collision_value_neg = NTRU_Q - (m_attack + 2*n_attack);
+
+    // printf("Printing Sum Value...\n");
+    for(int hj = 0; hj < NTRU_N; hj++)
+    {
+      int sum_value = MODQ(x_f_prod->coeffs[hj] + x_g_prod->coeffs[hj]);
+      // printf("[%d]: %d, ", hj, sum_value);
+      if(sum_value == max_collision_value_pos)
+      {
+        no_collisions_pos = no_collisions_pos+1;
+      }
+      else if(sum_value == max_collision_value_neg)
+      {
+        no_collisions_neg = no_collisions_neg+1;
+      }
+    }
+
+    no_true_collisions = no_collisions_pos + no_collisions_neg;
+    printf("Pos vs Neg Coll: %d/%d\n", no_collisions_pos, no_collisions_neg);
 
   }
 
