@@ -1,11 +1,15 @@
 # Attack_Simulations (NTRU Prime)
 
 This directory contains attack simulation scripts written in C, to perform the DF oracle-based attack on all the parameters of Streamlined NTRU Prime.
-The scripts are commented for better code readability. The main attack script is implemented in the test.c file in the directory "nist" of respective parameter set. You can check that script for implementation of the attack. You need OpenSSL to actually compile this script, as the implementation of NTRU utilizes OpenSSL library. You can add the OpenSSL directory your PATH, using the following commands. Please note that this command is only applicable to MacOS.
-```
-export CPATH=${CPATH+$CPATH:}/usr/local/opt/openssl@1.1/include
-export LIBRARY_PATH=${LIBRARY_PATH+$LIBRARY_PATH:}/usr/local/opt/openssl@1.1/lib
-```
+The scripts are commented for better code readability. The main attack script is implemented in the test.c file in the directory "nist" of respective parameter set. You can check that script for implementation of the attack. You need OpenSSL to actually compile this script, as the implementation of NTRU utilizes OpenSSL library.
+
+If OpenSSL is not available, it can be installed using the following instructions. The OpenSSL library (1.1.1, or later) must be installed. Use `sudo apt-get install libssl-dev` for most Linux distributions.
+On a Mac, an easy way is to use [brew](https://brew.sh), install it with `brew install openssl@1.1` and then add it to the
+`CPATH` and `LIBRARY_PATH` environment variables:
+  ```
+  export CPATH=${CPATH+$CPATH:}/usr/local/opt/openssl@1.1/include
+  export LIBRARY_PATH=${LIBRARY_PATH+$LIBRARY_PATH:}/usr/local/opt/openssl@1.1/lib
+  ```
 
 Please refer https://itectec.com/ubuntu/ubuntu-how-to-install-openssl-1-1-1-and-libssl-package/ for installation of OpenSSL 1.1.1 for Ubuntu. Please refer https://stackoverflow.com/questions/56639315/updating-openssl-to-1-1-1-on-macos for installation of OpenSSL 1.1.1 for MacOS.
 
